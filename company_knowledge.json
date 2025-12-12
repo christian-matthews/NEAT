@@ -1,0 +1,58 @@
+{
+    "Janssen S.A.": {
+        "desc": "Empresa de maquinaria y logística industrial, proveedora de la minería y construcción.",
+        "tier": "Industrial"
+    },
+    "Salfa Montajes S.A.": {
+        "desc": "Empresa de ingeniería y construcción industrial, filial de SalfaCorp, especializada en montajes y proyectos EPC para minería y energía.",
+        "tier": "Industrial"
+    },
+    "Grupo Cpech": {
+        "desc": "Institución líder en servicios educativos preuniversitarios en Chile.",
+        "tier": "Education"
+    },
+    "FACTORY EFICIENCIA SpA": {
+        "desc": "Asociada a Engie Factory, enfocada en innovación, eficiencia energética y proyectos tecnológicos.",
+        "tier": "Tech"
+    },
+    "ZIPPY SPA": {
+        "desc": "Fintech de soluciones de pago y pasarelas digitales con presencia en Latam.",
+        "tier": "Fintech"
+    },
+    "ICONSTRUYE S.A.": {
+        "desc": "Plataforma líder de marketplace y gestión de abastecimiento para la industria de la construcción.",
+        "tier": "Tech"
+    },
+    "SAAM S.A.": {
+        "desc": "Multinacional de servicios portuarios, remolcadores y logística de carga aérea.",
+        "tier": "Logistics"
+    },
+    "Bitumix S.A.": {
+        "desc": "Especialistas en obras viales, pavimentación y producción de asfalto.",
+        "tier": "Industrial"
+    },
+    "Redpath Chilena Ltda": {
+        "desc": "Contratista minero global especializado en excavación subterránea y piques.",
+        "tier": "Mining"
+    },
+    "Worley Group": {
+        "desc": "Gigante global de ingeniería y consultoría para energía, recursos y químicos.",
+        "tier": "Industrial"
+    },
+    "Capstone Copper": {
+        "desc": "Minera canadiense productora de cobre con operaciones en Chile (Mantos Blancos, Mantoverde).",
+        "tier": "Mining"
+    },
+    "Almagro S.A.": {
+        "desc": "Inmobiliaria de prestigio enfocada en el desarrollo residencial de alta calidad.",
+        "tier": "Real Estate"
+    },
+    "Deloitte": {
+        "desc": "Firma global de auditoría, consultoría y servicios profesionales.",
+        "tier": "Consulting"
+    },
+    "Banco": {
+        "desc": "Institución financiera.",
+        "tier": "Finance"
+    }
+}

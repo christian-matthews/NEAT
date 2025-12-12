@@ -1,0 +1,55 @@
+{
+    "weights": {
+        "admin": 0.33,
+        "ops": 0.33,
+        "biz": 0.33
+    },
+    "categories": {
+        "admin": {
+            "name": "Admin & Finanzas",
+            "keywords": [
+                "cierre contable", "mensual", "imputación", "gastos", "ingresos", 
+                "reportes financieros", "análisis de cuentas", "excel", "trazabilidad", 
+                "contratos", "auditoría", "estados financieros", "contabilidad", "balance",
+                "control administrativo", "procedimientos", "normativa"
+            ],
+            "max_expected": 6
+        },
+        "ops": {
+            "name": "Operaciones y Tesorería",
+            "keywords": [
+                "flujo de caja", "cash flow", "semanal", "proyección", "liquidez", 
+                "priorizar pagos", "tesorería", "banco", "transferencias", "conciliación bancaria",
+                "contingencias", "pagos", "operaciones financieras", "clearing", "recaudación"
+            ],
+            "max_expected": 5,
+            "culture_booster_keywords": ["fintech", "startup", "emprendimiento", "rápido crecimiento", "scaleup"]
+        },
+        "biz": {
+            "name": "Growth & Cultura",
+            "keywords": [
+                "procesos", "implementación", "mejora continua", "liderazgo", 
+                "equipo", "autonomía", "proactividad", "bi", "business intelligence", 
+                "automatización", "eficiencia", "escalable", "estrategia", "kpi",
+                "growth", "ownership", "colaboración", "user-centric"
+            ],
+            "max_expected": 6
+        }
+    },
+    "inference": {
+        "technical_keywords": [
+            "imputación", "asiento", "conciliación", "tabla dinámica", "macros", 
+            "sql", "erp", "sap", "manager", "digitación", "facturación", "rendición",
+            "análisis de cuentas", "balance", "declaración"
+        ],
+        "strategic_keywords": [
+            "dirección", "supervisión", "reporta al directorio", "estrategia", 
+            "negociación", "fusión", "adquisición", "board", "comité"
+        ],
+        "corporate_scope_keywords": [
+            "regional", "latam", "global", "multinacional", "holding", "filiales", 
+            "m&a", "ipo", "apertura en bolsa", "billones", "mmus$", "corporate", 
+            "directorio", "gobernanza"
+        ]
+    }
+}

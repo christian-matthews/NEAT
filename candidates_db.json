@@ -1,0 +1,1232 @@
+{
+  "NEAT-POST-20251209-185131": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 0,
+          "found": [],
+          "missing": [
+            "cierre contable",
+            "mensual",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "contratos",
+            "auditor\u00eda",
+            "estados financieros",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 0/6 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, mensual. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 0,
+          "found": [],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 0/5 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "procesos",
+            "eficiencia",
+            "bi",
+            "estrategia",
+            "equipo",
+            "implementaci\u00f3n",
+            "kpi"
+          ],
+          "missing": [
+            "mejora continua",
+            "liderazgo",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "escalable",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 7/6 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas. **Inferencia Reciente:** procesos, eficiencia, bi.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 0,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 1,
+        "potential_score": 25,
+        "industry_tier": "Tech / Digital"
+      }
+    },
+    "name": "Paulina Moraga"
+  },
+  "NEAT-POST-20251208-222042": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 80,
+          "found": [
+            "estados financieros",
+            "normativa",
+            "contabilidad",
+            "mensual",
+            "auditor\u00eda",
+            "contratos"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos"
+          ],
+          "reasoning": "Detectado 6/6 conceptos. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 0,
+          "found": [],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 0/5 conceptos.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "procesos",
+            "bi",
+            "equipo",
+            "liderazgo",
+            "implementaci\u00f3n",
+            "kpi"
+          ],
+          "missing": [
+            "mejora continua",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "eficiencia",
+            "escalable",
+            "estrategia",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 6/6 conceptos. **Inferencia Reciente:** procesos, bi, equipo.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 3,
+        "potential_score": 0,
+        "industry_tier": "General"
+      }
+    },
+    "name": "Romina Gisele Pirruccio"
+  },
+  "NEAT-POST-20251208-073552": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 25,
+          "found": [
+            "excel"
+          ],
+          "missing": [
+            "cierre contable",
+            "mensual",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "trazabilidad",
+            "contratos",
+            "auditor\u00eda",
+            "estados financieros",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 1/6 conceptos. **Bonus Fintech:** Experiencia directa en industria detectada. **Inferencia Reciente:** excel. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, mensual. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 45,
+          "found": [
+            "pagos"
+          ],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 1/5 conceptos. **Bonus Fintech:** Experiencia directa en industria detectada. **Inferencia Reciente:** pagos.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "procesos",
+            "eficiencia",
+            "bi",
+            "estrategia",
+            "equipo",
+            "mejora continua",
+            "liderazgo"
+          ],
+          "missing": [
+            "implementaci\u00f3n",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "escalable",
+            "kpi",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 7/6 conceptos. **Bonus Fintech:** Experiencia directa en industria detectada. **Inferencia Reciente:** procesos, eficiencia, bi.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 2,
+        "potential_score": 0,
+        "industry_tier": "Fintech (Ideal)"
+      }
+    },
+    "name": "Gloria Anfossi"
+  },
+  "NEAT-POST-20251204-175652": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 56,
+          "found": [
+            "estados financieros",
+            "normativa",
+            "contabilidad",
+            "mensual",
+            "gastos",
+            "auditor\u00eda",
+            "reportes financieros",
+            "contratos"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "ingresos",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos"
+          ],
+          "reasoning": "Detectado 8/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** contabilidad, reportes financieros. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 45,
+          "found": [
+            "pagos",
+            "tesorer\u00eda",
+            "banco"
+          ],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 3/5 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** banco.",
+          "questions": []
+        },
+        "biz": {
+          "score": 70,
+          "found": [
+            "procesos",
+            "eficiencia",
+            "automatizaci\u00f3n",
+            "bi",
+            "equipo",
+            "mejora continua",
+            "liderazgo",
+            "implementaci\u00f3n",
+            "kpi"
+          ],
+          "missing": [
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "escalable",
+            "estrategia",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 9/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** procesos, eficiencia, automatizaci\u00f3n.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 3,
+        "potential_score": 25,
+        "industry_tier": "Traditional (Logistics)"
+      }
+    },
+    "name": "rodrigo barcelo"
+  },
+  "NEAT-POST-20251204-144650": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 12,
+          "found": [
+            "contratos"
+          ],
+          "missing": [
+            "cierre contable",
+            "mensual",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "auditor\u00eda",
+            "estados financieros",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 1/6 conceptos. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, mensual. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 0,
+          "found": [],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 0/5 conceptos.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "procesos",
+            "bi",
+            "estrategia",
+            "equipo",
+            "implementaci\u00f3n"
+          ],
+          "missing": [
+            "mejora continua",
+            "liderazgo",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "eficiencia",
+            "escalable",
+            "kpi",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 5/6 conceptos. **Inferencia Reciente:** bi, estrategia, equipo.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 3,
+        "potential_score": 0,
+        "industry_tier": "General"
+      }
+    },
+    "name": "Carolina Dominguez"
+  },
+  "NEAT-POST-20251203-184435": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 70,
+          "found": [
+            "cierre contable",
+            "trazabilidad",
+            "excel",
+            "an\u00e1lisis de cuentas",
+            "auditor\u00eda",
+            "gastos",
+            "ingresos",
+            "imputaci\u00f3n",
+            "mensual",
+            "contratos",
+            "contabilidad",
+            "reportes financieros"
+          ],
+          "missing": [
+            "estados financieros",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 12/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** trazabilidad, excel, an\u00e1lisis de cuentas.",
+          "questions": [
+            "Faltan conceptos clave: estados financieros, balance. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 70,
+          "found": [
+            "banco",
+            "tesorer\u00eda",
+            "recaudaci\u00f3n",
+            "flujo de caja",
+            "liquidez",
+            "semanal",
+            "pagos",
+            "proyecci\u00f3n"
+          ],
+          "missing": [
+            "cash flow",
+            "priorizar pagos",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "operaciones financieras",
+            "clearing"
+          ],
+          "reasoning": "Detectado 8/5 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** banco, flujo de caja, liquidez.",
+          "questions": []
+        },
+        "biz": {
+          "score": 70,
+          "found": [
+            "bi",
+            "liderazgo",
+            "automatizaci\u00f3n",
+            "escalable",
+            "eficiencia",
+            "procesos",
+            "growth",
+            "equipo",
+            "kpi",
+            "user-centric",
+            "colaboraci\u00f3n",
+            "autonom\u00eda",
+            "ownership"
+          ],
+          "missing": [
+            "implementaci\u00f3n",
+            "mejora continua",
+            "proactividad",
+            "business intelligence",
+            "estrategia"
+          ],
+          "reasoning": "Detectado 13/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** bi, liderazgo, escalable.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Ejecutor Hands-On",
+        "hands_on_index": 80,
+        "risk_warning": "\u2705 Match Ideal: Sabe operar.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 2,
+        "potential_score": 25,
+        "industry_tier": "Traditional (Education)"
+      }
+    },
+    "name": "Roberto Fonseca"
+  },
+  "NEAT-POST-20251202-201039": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 26,
+          "found": [
+            "excel",
+            "balance"
+          ],
+          "missing": [
+            "cierre contable",
+            "mensual",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "trazabilidad",
+            "contratos",
+            "auditor\u00eda",
+            "estados financieros",
+            "contabilidad",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 2/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** excel.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, mensual. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 17,
+          "found": [
+            "proyecci\u00f3n"
+          ],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 1/5 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** proyecci\u00f3n.",
+          "questions": []
+        },
+        "biz": {
+          "score": 61,
+          "found": [
+            "procesos",
+            "bi",
+            "estrategia",
+            "equipo",
+            "implementaci\u00f3n"
+          ],
+          "missing": [
+            "mejora continua",
+            "liderazgo",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "eficiencia",
+            "escalable",
+            "kpi",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 5/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** bi.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "H\u00edbrido (Gesti\u00f3n + Operaci\u00f3n)",
+        "hands_on_index": 60,
+        "risk_warning": "\u2705 Perfil balanceado.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 1,
+        "potential_score": 0,
+        "industry_tier": "Traditional (Industrial)"
+      }
+    },
+    "name": "Pedro Almarza Fernandez"
+  },
+  "NEAT-POST-20251202-191730": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 100,
+          "found": [
+            "excel",
+            "auditor\u00eda",
+            "gastos",
+            "ingresos",
+            "mensual",
+            "estados financieros",
+            "normativa"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "trazabilidad",
+            "contratos",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos"
+          ],
+          "reasoning": "Detectado 7/6 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas. **Inferencia Reciente:** ingresos, mensual.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 84,
+          "found": [
+            "semanal",
+            "flujo de caja",
+            "liquidez"
+          ],
+          "missing": [
+            "cash flow",
+            "proyecci\u00f3n",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 3/5 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas. **Inferencia Reciente:** flujo de caja, liquidez.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "bi",
+            "liderazgo",
+            "procesos",
+            "equipo",
+            "estrategia",
+            "colaboraci\u00f3n",
+            "eficiencia"
+          ],
+          "missing": [
+            "implementaci\u00f3n",
+            "mejora continua",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "automatizaci\u00f3n",
+            "escalable",
+            "kpi",
+            "growth",
+            "ownership",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 7/6 conceptos. **Bonus Tech:** Experiencia en empresas tecnol\u00f3gicas. **Inferencia Reciente:** bi, liderazgo, procesos.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Corporativo Senior / Overqualified",
+        "hands_on_index": 100,
+        "risk_warning": "\ud83d\udea8 ALERTA: Acostumbrado a scopes Regionales/Globales.",
+        "retention_risk": "Alto",
+        "scope_intensity": 5,
+        "potential_score": 25,
+        "industry_tier": "Tech / Digital"
+      }
+    },
+    "name": "Jorge Guzm\u00e1n Pino"
+  },
+  "NEAT-POST-20251202-160641": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 76,
+          "found": [
+            "mensual",
+            "trazabilidad",
+            "excel",
+            "auditor\u00eda"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "gastos",
+            "ingresos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "contratos",
+            "estados financieros",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 4/6 conceptos. **Inferencia Reciente:** mensual, trazabilidad.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 0,
+          "found": [],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 0/5 conceptos.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "procesos",
+            "eficiencia",
+            "automatizaci\u00f3n",
+            "bi",
+            "estrategia",
+            "equipo",
+            "mejora continua",
+            "liderazgo",
+            "escalable",
+            "implementaci\u00f3n",
+            "kpi"
+          ],
+          "missing": [
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 11/6 conceptos. **Inferencia Reciente:** procesos, eficiencia, automatizaci\u00f3n.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Corporativo Senior / Overqualified",
+        "hands_on_index": 80,
+        "risk_warning": "\ud83d\udea8 ALERTA: Acostumbrado a scopes Regionales/Globales.",
+        "retention_risk": "Alto",
+        "scope_intensity": 3,
+        "potential_score": 25,
+        "industry_tier": "General"
+      }
+    },
+    "name": "V\u00edctor Y\u00e1\u00f1ez Chavarr\u00eda"
+  },
+  "NEAT-POST-20251202-125900": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 100,
+          "found": [
+            "trazabilidad",
+            "gastos",
+            "ingresos",
+            "mensual",
+            "contabilidad",
+            "balance",
+            "reportes financieros"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "contratos",
+            "auditor\u00eda",
+            "estados financieros",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 7/6 conceptos. **Inferencia Reciente:** balance, reportes financieros.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 75,
+          "found": [
+            "semanal",
+            "flujo de caja",
+            "proyecci\u00f3n"
+          ],
+          "missing": [
+            "cash flow",
+            "liquidez",
+            "priorizar pagos",
+            "tesorer\u00eda",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 3/5 conceptos. **Inferencia Reciente:** semanal, flujo de caja, proyecci\u00f3n.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "bi",
+            "automatizaci\u00f3n",
+            "procesos",
+            "equipo",
+            "kpi",
+            "implementaci\u00f3n",
+            "estrategia",
+            "eficiencia",
+            "mejora continua"
+          ],
+          "missing": [
+            "liderazgo",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "escalable",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 9/6 conceptos. **Inferencia Reciente:** bi, procesos, equipo.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "H\u00edbrido (Gesti\u00f3n + Operaci\u00f3n)",
+        "hands_on_index": 60,
+        "risk_warning": "\u2705 Perfil balanceado.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 2,
+        "potential_score": 0,
+        "industry_tier": "General"
+      }
+    },
+    "name": "Constanza Nicole Pino Page"
+  },
+  "NEAT-POST-20251202-123139": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 78,
+          "found": [
+            "mensual",
+            "contabilidad",
+            "normativa",
+            "ingresos",
+            "contratos"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "gastos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "auditor\u00eda",
+            "estados financieros",
+            "balance",
+            "control administrativo",
+            "procedimientos"
+          ],
+          "reasoning": "Detectado 5/6 conceptos. **Inferencia Reciente:** mensual, contabilidad, ingresos. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 50,
+          "found": [
+            "tesorer\u00eda",
+            "liquidez"
+          ],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "priorizar pagos",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 2/5 conceptos. **Inferencia Reciente:** tesorer\u00eda, liquidez.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "implementaci\u00f3n",
+            "bi",
+            "liderazgo",
+            "estrategia",
+            "procesos",
+            "eficiencia",
+            "equipo",
+            "automatizaci\u00f3n"
+          ],
+          "missing": [
+            "mejora continua",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "escalable",
+            "kpi",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 8/6 conceptos. **Inferencia Reciente:** bi, estrategia, procesos.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 2,
+        "potential_score": 25,
+        "industry_tier": "General"
+      }
+    },
+    "name": "Sergio Hern\u00e1n Iturra Alarc\u00f3n"
+  },
+  "NEAT-POST-20251202-052750": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 33,
+          "found": [
+            "ingresos",
+            "excel"
+          ],
+          "missing": [
+            "cierre contable",
+            "mensual",
+            "imputaci\u00f3n",
+            "gastos",
+            "reportes financieros",
+            "an\u00e1lisis de cuentas",
+            "trazabilidad",
+            "contratos",
+            "auditor\u00eda",
+            "estados financieros",
+            "contabilidad",
+            "balance",
+            "control administrativo",
+            "procedimientos",
+            "normativa"
+          ],
+          "reasoning": "Detectado 2/6 conceptos.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, mensual. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 55,
+          "found": [
+            "tesorer\u00eda",
+            "banco"
+          ],
+          "missing": [
+            "flujo de caja",
+            "cash flow",
+            "semanal",
+            "proyecci\u00f3n",
+            "liquidez",
+            "priorizar pagos",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "pagos",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 2/5 conceptos. **Inferencia Reciente:** tesorer\u00eda.",
+          "questions": []
+        },
+        "biz": {
+          "score": 100,
+          "found": [
+            "implementaci\u00f3n",
+            "escalable",
+            "kpi",
+            "bi",
+            "liderazgo",
+            "estrategia",
+            "mejora continua",
+            "procesos",
+            "equipo",
+            "automatizaci\u00f3n"
+          ],
+          "missing": [
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "eficiencia",
+            "growth",
+            "ownership",
+            "colaboraci\u00f3n",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 10/6 conceptos. **Inferencia Reciente:** escalable, bi, liderazgo.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Ejecutor Hands-On",
+        "hands_on_index": 80,
+        "risk_warning": "\u2705 Match Ideal: Sabe operar.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 1,
+        "potential_score": 25,
+        "industry_tier": "General"
+      }
+    },
+    "name": "Matias Gallegos N\u00fa\u00f1ez"
+  },
+  "NEAT-POST-20251201-211141": {
+    "analysis": {
+      "fits": {
+        "admin": {
+          "score": 56,
+          "found": [
+            "estados financieros",
+            "normativa",
+            "contabilidad",
+            "mensual",
+            "auditor\u00eda",
+            "procedimientos",
+            "ingresos",
+            "reportes financieros",
+            "contratos"
+          ],
+          "missing": [
+            "cierre contable",
+            "imputaci\u00f3n",
+            "gastos",
+            "an\u00e1lisis de cuentas",
+            "excel",
+            "trazabilidad",
+            "balance",
+            "control administrativo"
+          ],
+          "reasoning": "Detectado 9/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** estados financieros, normativa, mensual. Penalizaci\u00f3n por perfil delegador.",
+          "questions": [
+            "Faltan conceptos clave: cierre contable, imputaci\u00f3n. Profundizar."
+          ]
+        },
+        "ops": {
+          "score": 70,
+          "found": [
+            "flujo de caja",
+            "tesorer\u00eda",
+            "cash flow",
+            "pagos",
+            "liquidez"
+          ],
+          "missing": [
+            "semanal",
+            "proyecci\u00f3n",
+            "priorizar pagos",
+            "banco",
+            "transferencias",
+            "conciliaci\u00f3n bancaria",
+            "contingencias",
+            "operaciones financieras",
+            "clearing",
+            "recaudaci\u00f3n"
+          ],
+          "reasoning": "Detectado 5/5 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** flujo de caja, cash flow, liquidez.",
+          "questions": []
+        },
+        "biz": {
+          "score": 70,
+          "found": [
+            "procesos",
+            "eficiencia",
+            "automatizaci\u00f3n",
+            "bi",
+            "estrategia",
+            "equipo",
+            "mejora continua",
+            "liderazgo",
+            "colaboraci\u00f3n",
+            "kpi"
+          ],
+          "missing": [
+            "implementaci\u00f3n",
+            "autonom\u00eda",
+            "proactividad",
+            "business intelligence",
+            "escalable",
+            "growth",
+            "ownership",
+            "user-centric"
+          ],
+          "reasoning": "Detectado 10/6 conceptos. **Alerta Industria:** Experiencia principal en industria tradicional. **Inferencia Reciente:** procesos, eficiencia, automatizaci\u00f3n.",
+          "questions": []
+        }
+      },
+      "inference": {
+        "profile_type": "Estrat\u00e9gico / Delegador",
+        "hands_on_index": 40,
+        "risk_warning": "\u26a0\ufe0f RIESGO: Perfil 'De Escritorio'. Hands-On < 60%.",
+        "retention_risk": "Bajo",
+        "scope_intensity": 6,
+        "potential_score": 25,
+        "industry_tier": "Traditional (Mining)"
+      }
+    },
+    "name": "Mauricio Viotti"
+  }
+}
