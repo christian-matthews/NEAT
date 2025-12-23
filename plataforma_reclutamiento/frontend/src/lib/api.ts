@@ -194,6 +194,7 @@ export interface EvaluacionAI {
   perfil_tipo?: string
   profile_type?: string
   industry_tier?: string
+  risk_warning?: string
   keywords_encontradas?: string[]
   resumen?: string
   fecha_evaluacion?: string
