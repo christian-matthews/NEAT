@@ -161,28 +161,43 @@ export interface Candidato {
   email: string
   telefono?: string
   cv_url?: string
+  cv_archivo?: any
   cv_attachment?: any
   fecha_postulacion: string
   proceso_id?: string
   cargo_id?: string
   estado_candidato?: string
+  // Campos de evaluación (pueden venir del backend)
+  score_promedio?: number
+  hands_on_index?: number
+  retention_risk?: string
+  profile_type?: string
+  industry_tier?: string
+  potential_score?: number
+  created_at?: string
 }
 
 export interface EvaluacionAI {
   id: string
-  candidato_codigo: string
+  candidato_id?: string
+  candidato_codigo?: string
   score_total: number
+  score_promedio?: number
   score_admin?: number
   score_ops?: number
   score_biz?: number
   hands_on_index?: number
+  potential_score?: number
   potencial?: string
   riesgo_retencion?: string
+  retention_risk?: string
   perfil_tipo?: string
+  profile_type?: string
   industry_tier?: string
   keywords_encontradas?: string[]
   resumen?: string
   fecha_evaluacion?: string
+  created_at?: string
 }
 
 // ============================================================================
@@ -337,9 +352,14 @@ class ApiClient {
     return this.fetch<EvaluationResult>(`/evaluations/${candidateId}`)
   }
 
-  async evaluateCandidate(candidateId: string): Promise<EvaluationResult> {
-    return this.fetch<EvaluationResult>(`/evaluations/${candidateId}/evaluate`, {
+  async evaluateCandidate(candidateId: string, additionalContext?: string, forceReprocess?: boolean): Promise<EvaluationResult> {
+    const params = new URLSearchParams()
+    if (forceReprocess) params.append('force_reprocess', 'true')
+    const queryString = params.toString() ? `?${params.toString()}` : ''
+    
+    return this.fetch<EvaluationResult>(`/evaluations/${candidateId}/evaluate${queryString}`, {
       method: 'POST',
+      body: additionalContext ? JSON.stringify({ additional_context: additionalContext }) : undefined,
     })
   }
 
@@ -568,8 +588,8 @@ export async function getEvaluation(candidateId: string): Promise<EvaluationResu
   return api.getEvaluation(candidateId)
 }
 
-export async function evaluateCandidate(candidateId: string): Promise<EvaluationResult> {
-  return api.evaluateCandidate(candidateId)
+export async function evaluateCandidate(candidateId: string, additionalContext?: string, forceReprocess?: boolean): Promise<EvaluationResult> {
+  return api.evaluateCandidate(candidateId, additionalContext, forceReprocess)
 }
 
 export async function getComments(candidateId: string): Promise<Comment[]> {
