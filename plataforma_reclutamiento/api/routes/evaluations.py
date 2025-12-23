@@ -1,0 +1,569 @@
+"""
+Rutas de la API para evaluación de candidatos.
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+from typing import Optional
+import sys
+import os
+
+# Agregar el path del engine
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+
+from ..models import EvaluateRequest, EvaluationResponse, CategoryResultSchema, InferenceResultSchema
+from ..services.airtable import AirtableService
+from engine import CandidateEvaluator, PDFExtractor, CVProcessor, EvaluationConfig
+
+router = APIRouter(prefix="/evaluations", tags=["Evaluations"])
+
+
+def get_airtable_service() -> AirtableService:
+    """Dependency para obtener el servicio de Airtable."""
+    return AirtableService.from_env()
+
+
+def get_evaluator() -> CandidateEvaluator:
+    """Dependency para obtener el evaluador."""
+    return CandidateEvaluator()
+
+
+def get_pdf_extractor() -> PDFExtractor:
+    """Dependency para obtener el extractor de PDFs."""
+    return PDFExtractor()
+
+
+# ============================================================================
+# Evaluation Endpoints
+# ============================================================================
+
+@router.post("/evaluate", response_model=EvaluationResponse)
+async def evaluate_candidate(
+    request: EvaluateRequest,
+    airtable: AirtableService = Depends(get_airtable_service),
+    evaluator: CandidateEvaluator = Depends(get_evaluator),
+    pdf_extractor: PDFExtractor = Depends(get_pdf_extractor)
+):
+    """
+    Evalúa un candidato usando el motor de IA.
+    
+    - Si cv_text está presente, usa ese texto
+    - Si no, extrae el texto del PDF (cv_url del candidato)
+    - Guarda los resultados en Airtable
+    """
+    try:
+        # Verificar si ya existe evaluación (cache)
+        if not request.force_reeval:
+            existing = await airtable.get_evaluacion(request.candidato_id)
+            if existing and existing.get("id"):
+                return EvaluationResponse(
+                    id=existing["id"],
+                    candidato_id=request.candidato_id,
+                    score_promedio=existing.get("score_promedio", 0),
+                    fits={},  # No tenemos el detalle en cache simple
+                    inference=InferenceResultSchema(
+                        profile_type=existing.get("profile_type", ""),
+                        hands_on_index=existing.get("hands_on_index", 0),
+                        retention_risk=existing.get("retention_risk", "Bajo"),
+                        industry_tier=existing.get("industry_tier", "General")
+                    ),
+                    cached=True
+                )
+        
+        # Obtener texto del CV
+        cv_text = request.cv_text
+        if not cv_text:
+            # Obtener candidato para conseguir cv_url
+            candidato = await airtable.get_candidato_by_id(request.candidato_id)
+            if not candidato or not candidato.get("cv_url"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="No se encontró el CV del candidato. Proporciona cv_text o asegúrate que el candidato tiene cv_url."
+                )
+            
+            # Extraer texto del PDF
+            cv_url = candidato["cv_url"]
+            
+            # Si es una URL remota, necesitamos descargar primero
+            if cv_url.startswith("http"):
+                import httpx
+                import tempfile
+                
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(cv_url)
+                    response.raise_for_status()
+                    
+                    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+                        tmp.write(response.content)
+                        tmp_path = tmp.name
+                
+                cv_text = pdf_extractor.extract_with_fallback(tmp_path)
+                os.unlink(tmp_path)  # Limpiar archivo temporal
+            else:
+                # Es un path local
+                cv_text = pdf_extractor.extract_with_fallback(cv_url)
+        
+        if not cv_text or not cv_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail="No se pudo extraer texto del CV"
+            )
+        
+        # Ejecutar evaluación
+        result = evaluator.evaluate(cv_text)
+        
+        # Preparar datos para Airtable
+        evaluation_data = {
+            "score_promedio": result.score_promedio,
+            "config_version": result.config_version,
+            "fits": {
+                k: {
+                    "score": v.score,
+                    "found": v.found,
+                    "missing": v.missing,
+                    "reasoning": v.reasoning,
+                    "questions": v.questions
+                }
+                for k, v in result.fits.items()
+            },
+            "inference": {
+                "profile_type": result.inference.profile_type.value,
+                "hands_on_index": result.inference.hands_on_index,
+                "risk_warning": result.inference.risk_warning,
+                "retention_risk": result.inference.retention_risk.value,
+                "scope_intensity": result.inference.scope_intensity,
+                "potential_score": result.inference.potential_score,
+                "industry_tier": result.inference.industry_tier.value
+            }
+        }
+        
+        # Guardar en Airtable
+        saved = await airtable.create_evaluacion(request.candidato_id, evaluation_data)
+        
+        # Formatear respuesta
+        fits_response = {
+            k: CategoryResultSchema(
+                score=v.score,
+                found=v.found,
+                missing=v.missing,
+                reasoning=v.reasoning,
+                questions=v.questions
+            )
+            for k, v in result.fits.items()
+        }
+        
+        inference_response = InferenceResultSchema(
+            profile_type=result.inference.profile_type.value,
+            hands_on_index=result.inference.hands_on_index,
+            risk_warning=result.inference.risk_warning,
+            retention_risk=result.inference.retention_risk.value,
+            scope_intensity=result.inference.scope_intensity,
+            potential_score=result.inference.potential_score,
+            industry_tier=result.inference.industry_tier.value
+        )
+        
+        return EvaluationResponse(
+            id=saved.get("id"),
+            candidato_id=request.candidato_id,
+            score_promedio=result.score_promedio,
+            fits=fits_response,
+            inference=inference_response,
+            config_version=result.config_version,
+            cached=False
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{candidate_id_or_tracking}", response_model=EvaluationResponse)
+async def get_evaluation(
+    candidate_id_or_tracking: str,
+    airtable: AirtableService = Depends(get_airtable_service)
+):
+    """
+    Obtiene la evaluación de un candidato si existe.
+    Acepta tanto record_id de Airtable como codigo_tracking.
+    """
+    try:
+        candidato = None
+        tracking_code = None
+        candidate_id = candidate_id_or_tracking
+        
+        # Detectar si es tracking code o record ID
+        if candidate_id_or_tracking.startswith("rec"):
+            # Es un record ID de Airtable
+            candidato = await airtable.get_candidato_by_id(candidate_id_or_tracking)
+            tracking_code = candidato.get("codigo_tracking") if candidato else None
+        else:
+            # Es un tracking code
+            tracking_code = candidate_id_or_tracking
+            candidato = await airtable.get_candidato(tracking_code)
+            candidate_id = candidato.get("id") if candidato else candidate_id_or_tracking
+        
+        # Buscar evaluación por tracking code o por ID
+        evaluacion = await airtable.get_evaluacion(candidate_id, tracking_code)
+        
+        if not evaluacion or not evaluacion.get("id"):
+            raise HTTPException(
+                status_code=404,
+                detail="Evaluación no encontrada. Usa POST /evaluations/evaluate para evaluar."
+            )
+        
+        return EvaluationResponse(
+            id=evaluacion["id"],
+            candidato_id=candidate_id,
+            score_promedio=evaluacion.get("score_promedio") or 0,
+            fits={
+                "admin": CategoryResultSchema(score=evaluacion.get("score_admin") or 0),
+                "ops": CategoryResultSchema(score=evaluacion.get("score_ops") or 0),
+                "biz": CategoryResultSchema(score=evaluacion.get("score_biz") or 0)
+            },
+            inference=InferenceResultSchema(
+                profile_type=evaluacion.get("profile_type") or "",
+                hands_on_index=evaluacion.get("hands_on_index") or 0,
+                risk_warning=evaluacion.get("risk_warning") or "",
+                retention_risk=evaluacion.get("retention_risk") or "Bajo",
+                industry_tier=evaluacion.get("industry_tier") or "General"
+            ),
+            cached=True
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{candidate_id_or_tracking}/evaluate")
+async def evaluate_by_tracking_code(
+    candidate_id_or_tracking: str,
+    force_reprocess: bool = False,
+    airtable: AirtableService = Depends(get_airtable_service),
+    evaluator: CandidateEvaluator = Depends(get_evaluator)
+):
+    """
+    Evalúa un candidato usando OpenAI.
+    Acepta tanto record_id de Airtable como codigo_tracking.
+    
+    El proceso:
+    1. Obtiene el PDF del CV
+    2. Usa OpenAI GPT-4 Vision para extraer toda la información
+    3. Guarda la información estructurada en Airtable (campo cv_data_json)
+    4. Ejecuta la evaluación basada en keywords
+    5. Considera los comentarios/notas del candidato para ajustar la evaluación
+    6. Guarda los resultados de evaluación
+    
+    Args:
+        candidate_id_or_tracking: Record ID o código de tracking del candidato
+        force_reprocess: Si True, reprocesa el CV aunque ya exista evaluación
+    """
+    from pathlib import Path
+    import tempfile
+    import httpx
+    import urllib.parse
+    
+    try:
+        # Detectar si es record ID o tracking code
+        if candidate_id_or_tracking.startswith("rec"):
+            # Es un record ID de Airtable
+            candidato = await airtable.get_candidato_by_id(candidate_id_or_tracking)
+            codigo_tracking = candidato.get("codigo_tracking") if candidato else None
+        else:
+            # Es un tracking code
+            codigo_tracking = candidate_id_or_tracking
+            candidato = await airtable.get_candidato(codigo_tracking)
+        
+        if not candidato or not candidato.get("id"):
+            raise HTTPException(status_code=404, detail=f"Candidato {candidate_id_or_tracking} no encontrado")
+        
+        candidato_id = candidato["id"]
+        
+        # Verificar si ya existe evaluación (y no se fuerza reproceso)
+        if not force_reprocess:
+            existing = await airtable.get_evaluacion(candidato_id, codigo_tracking)
+            if existing and existing.get("id"):
+                return {
+                    "id": existing["id"],
+                    "candidato_codigo": codigo_tracking,
+                    "score_total": existing.get("score_promedio", 0),
+                    "score_admin": existing.get("score_admin", 0),
+                    "score_ops": existing.get("score_ops", 0),
+                    "score_biz": existing.get("score_biz", 0),
+                    "hands_on_index": existing.get("hands_on_index", 0),
+                    "potencial": "Alto" if existing.get("potential_score", 0) >= 70 else ("Medio" if existing.get("potential_score", 0) >= 40 else "Bajo"),
+                    "riesgo_retencion": existing.get("retention_risk", "Bajo"),
+                    "perfil_tipo": existing.get("profile_type", ""),
+                    "industry_tier": existing.get("industry_tier", ""),
+                    "cached": True
+                }
+        
+        # Obtener path al PDF
+        cv_url = candidato.get("cv_url")
+        cv_attachment = candidato.get("cv_archivo") or candidato.get("cv_attachment")
+        pdf_path = None
+        temp_file = None
+        
+        # Intentar primero con attachment de Airtable
+        if cv_attachment and isinstance(cv_attachment, list) and len(cv_attachment) > 0:
+            attachment_url = cv_attachment[0].get("url")
+            if attachment_url:
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.get(attachment_url)
+                    response.raise_for_status()
+                    
+                    temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                    temp_file.write(response.content)
+                    temp_file.close()
+                    pdf_path = temp_file.name
+        
+        # Si no hay attachment, buscar archivo local
+        if not pdf_path and cv_url:
+            if "localhost:8000/files/" in cv_url or "/files/" in cv_url:
+                filename = cv_url.split("/files/")[-1]
+                filename = urllib.parse.unquote(filename)
+                
+                cvs_dir = Path(__file__).parent.parent.parent / "data" / "cvs"
+                local_path = cvs_dir / filename
+                
+                if local_path.exists():
+                    pdf_path = str(local_path)
+            elif cv_url.startswith("http"):
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    response = await client.get(cv_url)
+                    response.raise_for_status()
+                    
+                    temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                    temp_file.write(response.content)
+                    temp_file.close()
+                    pdf_path = temp_file.name
+        
+        if not pdf_path:
+            raise HTTPException(
+                status_code=400,
+                detail=f"No se encontró el CV para {codigo_tracking}. CV URL: {cv_url}"
+            )
+        
+        # =====================================================================
+        # PROCESAR CV CON OPENAI
+        # =====================================================================
+        
+        try:
+            print(f"[INFO] Procesando CV con OpenAI: {codigo_tracking}")
+            
+            # Crear procesador de CV
+            cv_processor = CVProcessor()
+            
+            # Extraer información estructurada del CV
+            cv_data = cv_processor.process_pdf(pdf_path)
+            
+            # Obtener texto completo para evaluación
+            cv_text = cv_data.texto_completo
+            
+            # Guardar datos extraídos en el candidato
+            cv_data_json = cv_data.to_json()
+            
+            # Actualizar candidato con información extraída
+            await airtable.update_candidato(candidato_id, {
+                "cv_texto": cv_text[:10000] if len(cv_text) > 10000 else cv_text,  # Limitar tamaño
+                "cv_data_json": cv_data_json,
+                "años_experiencia": cv_data.años_experiencia,
+                "titulo_profesional": cv_data.titulo_profesional,
+                "resumen_perfil": cv_data.resumen_perfil,
+            })
+            
+            print(f"[INFO] CV procesado. Texto extraído: {len(cv_text)} caracteres")
+            
+        except Exception as e:
+            print(f"[WARN] Error procesando CV con OpenAI: {e}")
+            # Fallback a extractor tradicional
+            from engine import PDFExtractor
+            pdf_extractor = PDFExtractor()
+            cv_text = pdf_extractor.extract_with_fallback(pdf_path)
+            cv_data = None
+        
+        finally:
+            # Limpiar archivo temporal si existe
+            if temp_file:
+                try:
+                    os.unlink(temp_file.name)
+                except:
+                    pass
+        
+        if not cv_text or not cv_text.strip():
+            raise HTTPException(
+                status_code=400,
+                detail=f"No se pudo extraer texto del CV para {codigo_tracking}"
+            )
+        
+        # =====================================================================
+        # OBTENER COMENTARIOS/NOTAS PARA CONTEXTO Y AJUSTES MANUALES
+        # =====================================================================
+        
+        comentarios = await airtable.get_comentarios(candidato_id)
+        notas_contexto = ""
+        ajustes_manuales = {}
+        
+        if comentarios:
+            notas_contexto = "\n\n=== NOTAS DE EVALUADORES ===\n"
+            for c in comentarios:
+                nota_texto = c.get('comentario', '')
+                notas_contexto += f"- {c.get('autor', 'Usuario')}: {nota_texto}\n"
+                
+                # Parsear ajustes manuales de las notas
+                # Formatos soportados: 
+                #   - "hands on: 80%", "hands-on 80", "hand on 80%"
+                #   - "indicador a 80%", "cambiar a 80%"
+                #   - "potencial: alto", "riesgo: bajo"
+                import re
+                nota_lower = nota_texto.lower()
+                
+                # Hands-On Index - múltiples formatos
+                match = re.search(r'hands?[-\s]?on[:\s]*(?:a\s+)?(\d+)%?', nota_lower)
+                if not match:
+                    match = re.search(r'indicador\s+(?:a\s+)?(\d+)%?', nota_lower)
+                if not match:
+                    match = re.search(r'cambiar\s+(?:indicador\s+)?(?:a\s+)?(\d+)%?', nota_lower)
+                if match:
+                    ajustes_manuales['hands_on_index'] = int(match.group(1))
+                
+                # Potencial
+                match = re.search(r'potencial[:\s]+(alto|medio|bajo|\d+)%?', nota_lower)
+                if match:
+                    valor = match.group(1)
+                    if valor == 'alto':
+                        ajustes_manuales['potential_score'] = 85
+                    elif valor == 'medio':
+                        ajustes_manuales['potential_score'] = 55
+                    elif valor == 'bajo':
+                        ajustes_manuales['potential_score'] = 25
+                    else:
+                        ajustes_manuales['potential_score'] = int(valor)
+                
+                # Riesgo Retención
+                match = re.search(r'(?:riesgo\s+)?retenci[oó]n[:\s]+(alto|medio|bajo)', nota_lower)
+                if match:
+                    ajustes_manuales['retention_risk'] = match.group(1).capitalize()
+                
+                # Score general
+                match = re.search(r'score[:\s]+(\d+)%?', nota_lower)
+                if match:
+                    ajustes_manuales['score_promedio'] = int(match.group(1))
+                
+                # Admin
+                match = re.search(r'admin[:\s]+(\d+)%?', nota_lower)
+                if match:
+                    ajustes_manuales['score_admin'] = int(match.group(1))
+                
+                # Ops/Operaciones
+                match = re.search(r'(?:ops|operaciones)[:\s]+(\d+)%?', nota_lower)
+                if match:
+                    ajustes_manuales['score_ops'] = int(match.group(1))
+                
+                # Biz/Growth
+                match = re.search(r'(?:biz|growth|cultura)[:\s]+(\d+)%?', nota_lower)
+                if match:
+                    ajustes_manuales['score_biz'] = int(match.group(1))
+            
+            print(f"[INFO] Incluyendo {len(comentarios)} notas de evaluadores en la evaluación")
+            if ajustes_manuales:
+                print(f"[INFO] Ajustes manuales detectados: {ajustes_manuales}")
+        
+        # Combinar CV con notas para evaluación completa
+        texto_completo = cv_text
+        if notas_contexto:
+            texto_completo += notas_contexto
+        
+        # =====================================================================
+        # EJECUTAR EVALUACIÓN
+        # =====================================================================
+        
+        result = evaluator.evaluate(texto_completo)
+        
+        # Preparar datos para Airtable (aplicando ajustes manuales si existen)
+        evaluation_data = {
+            "score_promedio": ajustes_manuales.get('score_promedio', result.score_promedio),
+            "score_admin": ajustes_manuales.get('score_admin', 
+                result.fits.get("admin", type("obj", (), {"score": 0})).score if "admin" in result.fits else 0),
+            "score_ops": ajustes_manuales.get('score_ops',
+                result.fits.get("ops", type("obj", (), {"score": 0})).score if "ops" in result.fits else 0),
+            "score_biz": ajustes_manuales.get('score_biz',
+                result.fits.get("biz", type("obj", (), {"score": 0})).score if "biz" in result.fits else 0),
+            "hands_on_index": ajustes_manuales.get('hands_on_index', result.inference.hands_on_index),
+            "potential_score": ajustes_manuales.get('potential_score', result.inference.potential_score),
+            "retention_risk": ajustes_manuales.get('retention_risk', result.inference.retention_risk.value),
+            "profile_type": result.inference.profile_type.value,
+            "industry_tier": result.inference.industry_tier.value,
+            "config_version": result.config_version
+        }
+        
+        # Guardar evaluación en Airtable
+        saved = await airtable.create_evaluacion(candidato_id, evaluation_data, codigo_tracking)
+        
+        # Calcular potencial basado en el score (con ajuste manual aplicado)
+        potential = evaluation_data["potential_score"]
+        potencial_label = "Alto" if potential >= 70 else ("Medio" if potential >= 40 else "Bajo")
+        
+        return {
+            "id": saved.get("id"),
+            "candidato_codigo": codigo_tracking,
+            "score_total": evaluation_data["score_promedio"],
+            "score_admin": evaluation_data["score_admin"],
+            "score_ops": evaluation_data["score_ops"],
+            "score_biz": evaluation_data["score_biz"],
+            "hands_on_index": evaluation_data["hands_on_index"],
+            "potencial": potencial_label,
+            "riesgo_retencion": evaluation_data["retention_risk"],
+            "perfil_tipo": evaluation_data["profile_type"],
+            "industry_tier": evaluation_data["industry_tier"],
+            "cv_procesado": cv_data is not None,
+            "ajustes_manuales_aplicados": bool(ajustes_manuales),
+            "cached": False
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Error al evaluar: {str(e)}")
+
+
+@router.post("/evaluate-text")
+async def evaluate_text_only(
+    cv_text: str,
+    evaluator: CandidateEvaluator = Depends(get_evaluator)
+):
+    """
+    Evalúa un texto de CV sin guardarlo.
+    Útil para testing y demos.
+    """
+    try:
+        result = evaluator.evaluate(cv_text)
+        
+        return {
+            "score_promedio": result.score_promedio,
+            "fits": {
+                k: {
+                    "score": v.score,
+                    "found": v.found,
+                    "missing": v.missing,
+                    "reasoning": v.reasoning,
+                    "questions": v.questions
+                }
+                for k, v in result.fits.items()
+            },
+            "inference": {
+                "profile_type": result.inference.profile_type.value,
+                "hands_on_index": result.inference.hands_on_index,
+                "risk_warning": result.inference.risk_warning,
+                "retention_risk": result.inference.retention_risk.value,
+                "scope_intensity": result.inference.scope_intensity,
+                "potential_score": result.inference.potential_score,
+                "industry_tier": result.inference.industry_tier.value
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+

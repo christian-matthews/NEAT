@@ -1,0 +1,65 @@
+# render.yaml - Blueprint para NEAT Platform
+# ==========================================
+# Este archivo configura todos los servicios en Render
+
+services:
+  # ==========================================
+  # BACKEND - FastAPI
+  # ==========================================
+  - type: web
+    name: neat-api
+    runtime: python
+    region: oregon  # o frankfurt para Europa
+    plan: free  # Cambiar a starter ($7/mes) para producción
+    
+    # Configuración de build
+    buildCommand: ./build.sh
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    
+    # Variables de entorno (configurar en Dashboard de Render)
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: AIRTABLE_API_KEY
+        sync: false  # Configurar manualmente en Render
+      - key: AIRTABLE_BASE_ID
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+    
+    # Health check
+    healthCheckPath: /api/health
+    
+    # Auto-deploy desde GitHub
+    autoDeploy: true
+
+  # ==========================================
+  # FRONTEND - React/Vite (Static Site)
+  # ==========================================
+  - type: web
+    name: neat-frontend
+    runtime: static
+    region: oregon
+    plan: free
+    
+    # Build desde la carpeta frontend
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    
+    # Headers para SPA routing
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+    
+    # Redirección para React Router
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    
+    envVars:
+      - key: VITE_API_URL
+        sync: false  # URL del backend, ej: https://neat-api.onrender.com
+
