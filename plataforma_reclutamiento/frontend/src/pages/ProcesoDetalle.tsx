@@ -170,18 +170,26 @@ export default function ProcesoDetalle() {
     setEvaluatingAll(true)
     let nuevos = 0
     let reEvaluados = 0
-    let sinNotas = 0
+    let sinCambios = 0
     let failed = 0
     
     for (const candidato of candidatosValidos) {
       const tieneEvaluacion = !!evaluaciones[candidato.codigo_tracking]
       
       try {
-        let result
+        let result: any
         if (tieneEvaluacion) {
-          // Ya tiene evaluación → re-evaluar con force (requiere comentarios)
+          // Ya tiene evaluación → intentar re-evaluar (el backend decide si hay cambios)
           result = await api.reEvaluateCandidato(candidato.codigo_tracking)
-          reEvaluados++
+          
+          // Verificar si el backend lo saltó (sin cambios)
+          if (result.skipped) {
+            sinCambios++
+          } else if (!result.cached) {
+            reEvaluados++
+          } else {
+            sinCambios++
+          }
         } else {
           // No tiene evaluación → evaluar por primera vez
           result = await api.evaluateCandidato(candidato.codigo_tracking)
@@ -193,12 +201,8 @@ export default function ProcesoDetalle() {
           [candidato.codigo_tracking]: result
         }))
       } catch (error: any) {
-        // Si es error por falta de comentarios, contar como sinNotas
-        if (error.message?.includes('comentarios') || error.message?.includes('notas')) {
-          sinNotas++
-        } else {
-          failed++
-        }
+        failed++
+        console.error(`Error evaluando ${candidato.nombre_completo}:`, error)
       }
     }
     
@@ -207,11 +211,15 @@ export default function ProcesoDetalle() {
     // Construir mensaje de resumen
     const partes = []
     if (nuevos > 0) partes.push(`${nuevos} nuevas`)
-    if (reEvaluados > 0) partes.push(`${reEvaluados} re-evaluadas`)
-    if (sinNotas > 0) partes.push(`${sinNotas} sin notas`)
+    if (reEvaluados > 0) partes.push(`${reEvaluados} actualizadas`)
+    if (sinCambios > 0) partes.push(`${sinCambios} sin cambios`)
     if (failed > 0) partes.push(`${failed} fallidas`)
     
-    toast.success(`Evaluación: ${partes.join(', ')}`)
+    if (partes.length === 0) {
+      toast.info('No hubo cambios')
+    } else {
+      toast.success(`Evaluación: ${partes.join(', ')}`)
+    }
     
     // Recargar datos
     loadData()

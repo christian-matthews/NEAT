@@ -391,29 +391,38 @@ async def evaluate_by_tracking_code(
         estado_candidato = candidato.get("estado_candidato", "nuevo")
         
         # =====================================================================
-        # VALIDACIONES PARA RE-EVALUACIÓN
+        # VALIDACIONES Y LÓGICA INTELIGENTE DE RE-EVALUACIÓN
         # =====================================================================
         
         # 1. No re-evaluar candidatos rechazados o descartados
         if estado_candidato in ["rechazado", "descartado"]:
-            raise HTTPException(
-                status_code=400, 
-                detail=f"No se puede re-evaluar un candidato con estado '{estado_candidato}'. Cambia el estado primero."
-            )
-        
-        # 2. Si es re-evaluación (force_reprocess), verificar que tenga comentarios
-        if force_reprocess:
-            comentarios_check = await airtable.get_comentarios(candidato_id)
-            if not comentarios_check or len(comentarios_check) == 0:
-                raise HTTPException(
-                    status_code=400,
-                    detail="No se puede re-evaluar sin comentarios. Agrega notas de entrevista primero."
-                )
-            print(f"[INFO] Re-evaluación con {len(comentarios_check)} comentarios")
-        
-        # Verificar si ya existe evaluación (y no se fuerza reproceso)
-        if not force_reprocess:
+            # Retornar evaluación existente si hay, sino error
             existing = await airtable.get_evaluacion(candidato_id, codigo_tracking)
+            if existing and existing.get("id"):
+                return {
+                    "id": existing["id"],
+                    "candidato_codigo": codigo_tracking,
+                    "score_total": existing.get("score_promedio", 0),
+                    "score_admin": existing.get("score_admin", 0),
+                    "score_ops": existing.get("score_ops", 0),
+                    "score_biz": existing.get("score_biz", 0),
+                    "hands_on_index": existing.get("hands_on_index", 0),
+                    "potencial": "Alto" if existing.get("potential_score", 0) >= 70 else ("Medio" if existing.get("potential_score", 0) >= 40 else "Bajo"),
+                    "riesgo_retencion": existing.get("retention_risk", "Bajo"),
+                    "perfil_tipo": existing.get("profile_type", ""),
+                    "industry_tier": existing.get("industry_tier", ""),
+                    "cached": True,
+                    "skipped": True,
+                    "skip_reason": "rechazado"
+                }
+            raise HTTPException(status_code=400, detail=f"Candidato rechazado sin evaluación previa")
+        
+        # 2. Obtener evaluación existente y comentarios
+        existing = await airtable.get_evaluacion(candidato_id, codigo_tracking)
+        comentarios_check = await airtable.get_comentarios(candidato_id)
+        
+        # 3. Si no se fuerza reproceso, retornar evaluación existente
+        if not force_reprocess:
             if existing and existing.get("id"):
                 return {
                     "id": existing["id"],
@@ -429,6 +438,61 @@ async def evaluate_by_tracking_code(
                     "industry_tier": existing.get("industry_tier", ""),
                     "cached": True
                 }
+        
+        # 4. Si es re-evaluación, verificar si hay comentarios nuevos
+        if force_reprocess and existing and existing.get("id"):
+            if not comentarios_check or len(comentarios_check) == 0:
+                # Sin comentarios → retornar evaluación existente (no error)
+                print(f"[INFO] {codigo_tracking}: Sin comentarios, retornando evaluación existente")
+                return {
+                    "id": existing["id"],
+                    "candidato_codigo": codigo_tracking,
+                    "score_total": existing.get("score_promedio", 0),
+                    "score_admin": existing.get("score_admin", 0),
+                    "score_ops": existing.get("score_ops", 0),
+                    "score_biz": existing.get("score_biz", 0),
+                    "hands_on_index": existing.get("hands_on_index", 0),
+                    "potencial": "Alto" if existing.get("potential_score", 0) >= 70 else ("Medio" if existing.get("potential_score", 0) >= 40 else "Bajo"),
+                    "riesgo_retencion": existing.get("retention_risk", "Bajo"),
+                    "perfil_tipo": existing.get("profile_type", ""),
+                    "industry_tier": existing.get("industry_tier", ""),
+                    "cached": True,
+                    "skipped": True,
+                    "skip_reason": "sin_comentarios"
+                }
+            
+            # Verificar si hay comentarios más recientes que la evaluación
+            from datetime import datetime
+            eval_time = existing.get("created_at", "")
+            
+            # Buscar el comentario más reciente
+            comentario_mas_reciente = None
+            for c in comentarios_check:
+                c_time = c.get("created_at", "")
+                if c_time and (not comentario_mas_reciente or c_time > comentario_mas_reciente):
+                    comentario_mas_reciente = c_time
+            
+            # Si la evaluación es más reciente que todos los comentarios, no re-evaluar
+            if eval_time and comentario_mas_reciente and eval_time > comentario_mas_reciente:
+                print(f"[INFO] {codigo_tracking}: Evaluación más reciente que comentarios, saltando")
+                return {
+                    "id": existing["id"],
+                    "candidato_codigo": codigo_tracking,
+                    "score_total": existing.get("score_promedio", 0),
+                    "score_admin": existing.get("score_admin", 0),
+                    "score_ops": existing.get("score_ops", 0),
+                    "score_biz": existing.get("score_biz", 0),
+                    "hands_on_index": existing.get("hands_on_index", 0),
+                    "potencial": "Alto" if existing.get("potential_score", 0) >= 70 else ("Medio" if existing.get("potential_score", 0) >= 40 else "Bajo"),
+                    "riesgo_retencion": existing.get("retention_risk", "Bajo"),
+                    "perfil_tipo": existing.get("profile_type", ""),
+                    "industry_tier": existing.get("industry_tier", ""),
+                    "cached": True,
+                    "skipped": True,
+                    "skip_reason": "ya_actualizado"
+                }
+            
+            print(f"[INFO] {codigo_tracking}: Hay comentarios nuevos, re-evaluando...")
         
         # Obtener path al PDF
         cv_url = candidato.get("cv_url")
