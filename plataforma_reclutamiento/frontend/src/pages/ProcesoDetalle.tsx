@@ -9,17 +9,15 @@ import {
 import { toast } from 'sonner'
 import { api, Candidato, EvaluacionAI } from '../lib/api'
 
-// Estados de candidato
+// Estados de candidato (sincronizados con Airtable)
+// NOTA: Si agregas estados aquí, también agrégalos en Airtable → Postulaciones → estado_candidato
 const ESTADOS_CANDIDATO = [
   { value: 'nuevo', label: 'Nuevo', color: 'bg-cyan-500/20 text-cyan-400' },
-  { value: 'recibido', label: 'Recibido', color: 'bg-zinc-500/20 text-zinc-400' },
   { value: 'en_revision', label: 'En Revisión', color: 'bg-blue-500/20 text-blue-400' },
-  { value: 'evaluado', label: 'Evaluado IA', color: 'bg-purple-500/20 text-purple-400' },
   { value: 'entrevista', label: 'Entrevista', color: 'bg-yellow-500/20 text-yellow-400' },
   { value: 'finalista', label: 'Finalista', color: 'bg-amber-500/20 text-amber-400' },
   { value: 'seleccionado', label: 'Seleccionado', color: 'bg-green-500/20 text-green-400' },
-  { value: 'rechazado', label: 'Rechazado', color: 'bg-red-500/20 text-red-400' },
-  { value: 'descartado', label: 'Descartado', color: 'bg-red-800/20 text-red-500' },
+  { value: 'descartado', label: 'Descartado', color: 'bg-red-500/20 text-red-400' },
 ]
 
 // Estados de proceso
