@@ -11,12 +11,15 @@ import { api, Candidato, EvaluacionAI } from '../lib/api'
 
 // Estados de candidato
 const ESTADOS_CANDIDATO = [
+  { value: 'nuevo', label: 'Nuevo', color: 'bg-cyan-500/20 text-cyan-400' },
   { value: 'recibido', label: 'Recibido', color: 'bg-zinc-500/20 text-zinc-400' },
   { value: 'en_revision', label: 'En Revisión', color: 'bg-blue-500/20 text-blue-400' },
   { value: 'evaluado', label: 'Evaluado IA', color: 'bg-purple-500/20 text-purple-400' },
   { value: 'entrevista', label: 'Entrevista', color: 'bg-yellow-500/20 text-yellow-400' },
+  { value: 'finalista', label: 'Finalista', color: 'bg-amber-500/20 text-amber-400' },
   { value: 'seleccionado', label: 'Seleccionado', color: 'bg-green-500/20 text-green-400' },
   { value: 'rechazado', label: 'Rechazado', color: 'bg-red-500/20 text-red-400' },
+  { value: 'descartado', label: 'Descartado', color: 'bg-red-800/20 text-red-500' },
 ]
 
 // Estados de proceso
@@ -58,6 +61,8 @@ export default function ProcesoDetalle() {
   const [sortBy, setSortBy] = useState<'nombre' | 'score' | 'fecha'>('score')
   const [sortDesc, setSortDesc] = useState(true)
   const [showNotesModal, setShowNotesModal] = useState(false)
+  const [selectedEstados, setSelectedEstados] = useState<string[]>([])
+  const [showEstadoFilter, setShowEstadoFilter] = useState(false)
 
   useEffect(() => {
     if (id) loadData()
@@ -110,6 +115,13 @@ export default function ProcesoDetalle() {
       c.email.toLowerCase().includes(searchTerm.toLowerCase())
     )
     
+    // Filtrar por estados seleccionados
+    if (selectedEstados.length > 0) {
+      result = result.filter(c => 
+        selectedEstados.includes(c.estado_candidato || 'recibido')
+      )
+    }
+    
     return result.sort((a, b) => {
       let compare = 0
       switch (sortBy) {
@@ -127,7 +139,7 @@ export default function ProcesoDetalle() {
       }
       return sortDesc ? -compare : compare
     })
-  }, [candidatos, searchTerm, sortBy, sortDesc, evaluaciones])
+  }, [candidatos, searchTerm, sortBy, sortDesc, evaluaciones, selectedEstados])
 
   const handleEvaluate = async (candidato: Candidato) => {
     setEvaluating(candidato.codigo_tracking)
@@ -345,6 +357,64 @@ export default function ProcesoDetalle() {
                 onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-lg border border-zinc-700 focus:border-purple-500 outline-none"
               />
+            </div>
+            
+            {/* Filtro por Estado */}
+            <div className="relative">
+              <button
+                onClick={() => setShowEstadoFilter(!showEstadoFilter)}
+                className={`px-4 py-2 rounded-lg border flex items-center gap-2 transition-colors ${
+                  selectedEstados.length > 0 
+                    ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' 
+                    : 'bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-600'
+                }`}
+              >
+                <span>Estado</span>
+                {selectedEstados.length > 0 && (
+                  <span className="px-1.5 py-0.5 text-xs bg-purple-500 text-white rounded-full">
+                    {selectedEstados.length}
+                  </span>
+                )}
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {showEstadoFilter && (
+                <div className="absolute top-full mt-2 right-0 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 min-w-48">
+                  <div className="p-2 border-b border-zinc-700 flex justify-between items-center">
+                    <span className="text-xs text-zinc-400">Filtrar por estado</span>
+                    {selectedEstados.length > 0 && (
+                      <button 
+                        onClick={() => setSelectedEstados([])}
+                        className="text-xs text-red-400 hover:text-red-300"
+                      >
+                        Limpiar
+                      </button>
+                    )}
+                  </div>
+                  {ESTADOS_CANDIDATO.map(estado => (
+                    <label
+                      key={estado.value}
+                      className="flex items-center gap-3 px-3 py-2 hover:bg-zinc-700/50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedEstados.includes(estado.value)}
+                        onChange={e => {
+                          if (e.target.checked) {
+                            setSelectedEstados([...selectedEstados, estado.value])
+                          } else {
+                            setSelectedEstados(selectedEstados.filter(s => s !== estado.value))
+                          }
+                        }}
+                        className="rounded border-zinc-600 bg-zinc-700 text-purple-500 focus:ring-purple-500"
+                      />
+                      <span className={`px-2 py-0.5 rounded text-xs ${estado.color}`}>
+                        {estado.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
