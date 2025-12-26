@@ -156,78 +156,62 @@ export default function ProcesoDetalle() {
   }
 
   const handleEvaluateAll = async () => {
-    const sinEvaluar = candidatos.filter(c => !evaluaciones[c.codigo_tracking])
-    if (sinEvaluar.length === 0) {
-      toast.info('Todos los candidatos ya están evaluados')
+    // Filtrar candidatos válidos (no rechazados/descartados)
+    const candidatosValidos = candidatos.filter(c => {
+      const estado = c.estado_candidato || 'nuevo'
+      return !['rechazado', 'descartado'].includes(estado)
+    })
+    
+    if (candidatosValidos.length === 0) {
+      toast.info('No hay candidatos válidos para evaluar')
       return
     }
     
     setEvaluatingAll(true)
-    let success = 0
+    let nuevos = 0
+    let reEvaluados = 0
+    let sinNotas = 0
     let failed = 0
-    
-    for (const candidato of sinEvaluar) {
-      try {
-        const result = await api.evaluateCandidato(candidato.codigo_tracking)
-        setEvaluaciones(prev => ({
-          ...prev,
-          [candidato.codigo_tracking]: result
-        }))
-        success++
-      } catch (error) {
-        failed++
-      }
-    }
-    
-    setEvaluatingAll(false)
-    toast.success(`Evaluación masiva: ${success} exitosas, ${failed} fallidas`)
-  }
-
-  const [reEvaluatingAll, setReEvaluatingAll] = useState(false)
-  
-  const handleReEvaluateAll = async () => {
-    // Solo re-evaluar candidatos que:
-    // 1. No estén rechazados/descartados
-    // 2. Tengan evaluación previa (implica que tienen que tener algo que re-evaluar)
-    const candidatosValidos = candidatos.filter(c => {
-      const estado = c.estado_candidato || 'nuevo'
-      return !['rechazado', 'descartado'].includes(estado) && evaluaciones[c.codigo_tracking]
-    })
-    
-    if (candidatosValidos.length === 0) {
-      toast.info('No hay candidatos válidos para re-evaluar. Deben tener evaluación previa y no estar rechazados.')
-      return
-    }
-    
-    setReEvaluatingAll(true)
-    let success = 0
-    let failed = 0
-    let skipped = 0
     
     for (const candidato of candidatosValidos) {
+      const tieneEvaluacion = !!evaluaciones[candidato.codigo_tracking]
+      
       try {
-        const result = await api.reEvaluateCandidato(candidato.codigo_tracking)
+        let result
+        if (tieneEvaluacion) {
+          // Ya tiene evaluación → re-evaluar con force (requiere comentarios)
+          result = await api.reEvaluateCandidato(candidato.codigo_tracking)
+          reEvaluados++
+        } else {
+          // No tiene evaluación → evaluar por primera vez
+          result = await api.evaluateCandidato(candidato.codigo_tracking)
+          nuevos++
+        }
+        
         setEvaluaciones(prev => ({
           ...prev,
           [candidato.codigo_tracking]: result
         }))
-        success++
-        toast.success(`${candidato.nombre_completo}: ${result.score_total}%`)
       } catch (error: any) {
-        // Si el error es por falta de comentarios, contar como skipped
-        if (error.message?.includes('sin comentarios') || error.message?.includes('comentarios')) {
-          skipped++
+        // Si es error por falta de comentarios, contar como sinNotas
+        if (error.message?.includes('comentarios') || error.message?.includes('notas')) {
+          sinNotas++
         } else {
           failed++
         }
       }
     }
     
-    setReEvaluatingAll(false)
-    let mensaje = `Re-evaluación: ${success} actualizadas`
-    if (skipped > 0) mensaje += `, ${skipped} sin notas`
-    if (failed > 0) mensaje += `, ${failed} fallidas`
-    toast.success(mensaje)
+    setEvaluatingAll(false)
+    
+    // Construir mensaje de resumen
+    const partes = []
+    if (nuevos > 0) partes.push(`${nuevos} nuevas`)
+    if (reEvaluados > 0) partes.push(`${reEvaluados} re-evaluadas`)
+    if (sinNotas > 0) partes.push(`${sinNotas} sin notas`)
+    if (failed > 0) partes.push(`${failed} fallidas`)
+    
+    toast.success(`Evaluación: ${partes.join(', ')}`)
     
     // Recargar datos
     loadData()
@@ -346,8 +330,9 @@ export default function ProcesoDetalle() {
             </button>
             <button
               onClick={handleEvaluateAll}
-              disabled={evaluatingAll || reEvaluatingAll}
+              disabled={evaluatingAll}
               className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+              title="Evalúa nuevos y re-evalúa los que tienen notas (excluye rechazados)"
             >
               {evaluatingAll ? (
                 <>
@@ -357,25 +342,7 @@ export default function ProcesoDetalle() {
               ) : (
                 <>
                   <Brain className="w-4 h-4" />
-                  Evaluar Nuevos
-                </>
-              )}
-            </button>
-            <button
-              onClick={handleReEvaluateAll}
-              disabled={evaluatingAll || reEvaluatingAll}
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50"
-              title="Re-evalúa candidatos con notas de entrevista (excluye rechazados)"
-            >
-              {reEvaluatingAll ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  Re-evaluando...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" />
-                  Re-evaluar Con Notas
+                  Evaluar Todos
                 </>
               )}
             </button>
