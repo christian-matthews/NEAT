@@ -89,7 +89,7 @@ app = FastAPI(
     - Extracción de texto de PDFs
     - API REST moderna con FastAPI
     """,
-    version="2.0.0",
+    version="2.1.0",  # Improved AI analysis for negative comments
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -142,7 +142,7 @@ async def root():
     return {
         "status": "ok",
         "service": "The Wingman API",
-        "version": "2.0.0"
+        "version": "2.1.0"
     }
 
 
