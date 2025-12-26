@@ -145,25 +145,9 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
         </button>
         
         <div className="flex-1">
-          <div className="flex items-center gap-4">
-            <h1 className="text-2xl font-semibold text-white">
-              {candidate.nombre_completo}
-            </h1>
-            
-            {/* Selector de Estado */}
-            <select
-              value={candidate.estado_candidato || 'nuevo'}
-              onChange={e => estadoMutation.mutate(e.target.value)}
-              disabled={estadoMutation.isPending}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors ${
-                getEstadoBadge(candidate.estado_candidato || 'nuevo').color
-              } ${estadoMutation.isPending ? 'opacity-50' : ''}`}
-            >
-              {ESTADOS_CANDIDATO.map(e => (
-                <option key={e.value} value={e.value}>{e.label}</option>
-              ))}
-            </select>
-          </div>
+          <h1 className="text-2xl font-semibold text-white">
+            {candidate.nombre_completo}
+          </h1>
           
           <div className="flex items-center gap-4 mt-1 text-sm text-zinc-500">
             <span className="flex items-center gap-1">
@@ -178,6 +162,20 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
             )}
           </div>
         </div>
+
+        {/* Selector de Estado */}
+        <select
+          value={candidate.estado_candidato || 'nuevo'}
+          onChange={e => estadoMutation.mutate(e.target.value)}
+          disabled={estadoMutation.isPending}
+          className={`px-3 py-1.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors ${
+            getEstadoBadge(candidate.estado_candidato || 'nuevo').color
+          } ${estadoMutation.isPending ? 'opacity-50' : ''}`}
+        >
+          {ESTADOS_CANDIDATO.map(e => (
+            <option key={e.value} value={e.value}>{e.label}</option>
+          ))}
+        </select>
 
         <button
           onClick={() => evaluateMutation.mutate()}
