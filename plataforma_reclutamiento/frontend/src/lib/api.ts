@@ -466,6 +466,14 @@ class ApiClient {
     return response.blob()
   }
 
+  async exportProcesoPDF(id: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/processes/${id}/export-pdf`, {
+      headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {},
+    })
+    if (!response.ok) throw new Error('Error al exportar PDF')
+    return response.blob()
+  }
+
   // ==========================================================================
   // Cargos
   // ==========================================================================

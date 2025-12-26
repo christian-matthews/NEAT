@@ -240,6 +240,27 @@ export default function ProcesoDetalle() {
     }
   }
 
+  const [exportingPDF, setExportingPDF] = useState(false)
+  
+  const handleExportPDF = async () => {
+    try {
+      setExportingPDF(true)
+      toast.info('Generando PDF... puede tomar unos segundos')
+      const blob = await api.exportProcesoPDF(id!)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${proceso?.codigo_proceso || 'proceso'}_resumen.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('PDF descargado')
+    } catch (error) {
+      toast.error('Error al generar PDF')
+    } finally {
+      setExportingPDF(false)
+    }
+  }
+
   const handleUpdateEstado = async (newEstado: string) => {
     try {
       await api.updateProceso(id!, { estado: newEstado })
@@ -335,6 +356,19 @@ export default function ProcesoDetalle() {
             >
               <FileSpreadsheet className="w-4 h-4" />
               CSV
+            </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              className="px-3 py-2 bg-red-900/50 hover:bg-red-800/50 border border-red-700/50 rounded-lg flex items-center gap-2 text-sm disabled:opacity-50"
+              title="Exportar resumen completo con fichas de candidatos"
+            >
+              {exportingPDF ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              PDF
             </button>
             <button
               onClick={handleEvaluateAll}

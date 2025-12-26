@@ -205,3 +205,72 @@ async def export_process_csv(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{proceso_id}/export-pdf")
+async def export_process_pdf(
+    proceso_id: str,
+    airtable: AirtableService = Depends(get_airtable_service)
+):
+    """
+    Exporta un resumen completo del proceso a PDF.
+    
+    Incluye:
+    - Resumen ejecutivo con estadísticas
+    - Vista Canvas con pipeline de candidatos (4 columnas)
+    - Fichas individuales de candidatos con evaluaciones y comentarios
+    """
+    try:
+        from ..services.pdf_generator import generate_proceso_pdf
+        
+        # Obtener datos del proceso
+        proceso = await airtable.get_proceso_by_id(proceso_id)
+        if not proceso:
+            raise HTTPException(status_code=404, detail="Proceso no encontrado")
+        
+        # Obtener candidatos
+        candidatos = await airtable.get_candidatos(proceso_id=proceso_id)
+        
+        # Obtener evaluaciones y comentarios para cada candidato
+        evaluaciones = {}
+        comentarios = {}
+        
+        for c in candidatos:
+            cid = c['id']
+            tracking = c.get('codigo_tracking')
+            
+            # Evaluación
+            eval_data = await airtable.get_evaluacion(cid, tracking)
+            if eval_data:
+                evaluaciones[cid] = eval_data
+            
+            # Comentarios
+            coms = await airtable.get_comentarios(cid)
+            if coms:
+                comentarios[cid] = coms
+        
+        # Generar PDF
+        pdf_bytes = generate_proceso_pdf(
+            proceso=proceso,
+            candidatos=candidatos,
+            evaluaciones=evaluaciones,
+            comentarios=comentarios
+        )
+        
+        # Nombre del archivo
+        codigo = proceso.get('codigo_proceso', 'proceso')
+        filename = f"{codigo}_resumen.pdf"
+        
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
