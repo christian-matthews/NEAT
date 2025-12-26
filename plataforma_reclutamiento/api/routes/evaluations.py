@@ -462,17 +462,44 @@ async def evaluate_by_tracking_code(
                 }
             
             # Verificar si hay comentarios más recientes que la evaluación
+            # IMPORTANTE: Solo contar comentarios de HUMANOS, no del Sistema
             from datetime import datetime
             eval_time = existing.get("created_at", "")
             
-            # Buscar el comentario más reciente
+            # Filtrar solo comentarios de humanos (excluir Sistema)
+            comentarios_humanos = [
+                c for c in comentarios_check 
+                if not c.get("autor", "").startswith("Sistema")
+            ]
+            
+            if not comentarios_humanos:
+                # Solo hay comentarios del sistema, no re-evaluar
+                print(f"[INFO] {codigo_tracking}: Solo comentarios del sistema, saltando")
+                return {
+                    "id": existing["id"],
+                    "candidato_codigo": codigo_tracking,
+                    "score_total": existing.get("score_promedio", 0),
+                    "score_admin": existing.get("score_admin", 0),
+                    "score_ops": existing.get("score_ops", 0),
+                    "score_biz": existing.get("score_biz", 0),
+                    "hands_on_index": existing.get("hands_on_index", 0),
+                    "potencial": "Alto" if existing.get("potential_score", 0) >= 70 else ("Medio" if existing.get("potential_score", 0) >= 40 else "Bajo"),
+                    "riesgo_retencion": existing.get("retention_risk", "Bajo"),
+                    "perfil_tipo": existing.get("profile_type", ""),
+                    "industry_tier": existing.get("industry_tier", ""),
+                    "cached": True,
+                    "skipped": True,
+                    "skip_reason": "solo_comentarios_sistema"
+                }
+            
+            # Buscar el comentario HUMANO más reciente
             comentario_mas_reciente = None
-            for c in comentarios_check:
+            for c in comentarios_humanos:
                 c_time = c.get("created_at", "")
                 if c_time and (not comentario_mas_reciente or c_time > comentario_mas_reciente):
                     comentario_mas_reciente = c_time
             
-            # Si la evaluación es más reciente que todos los comentarios, no re-evaluar
+            # Si la evaluación es más reciente que todos los comentarios humanos, no re-evaluar
             if eval_time and comentario_mas_reciente and eval_time > comentario_mas_reciente:
                 print(f"[INFO] {codigo_tracking}: Evaluación más reciente que comentarios, saltando")
                 return {
@@ -596,7 +623,14 @@ async def evaluate_by_tracking_code(
         # OBTENER COMENTARIOS/NOTAS PARA CONTEXTO Y AJUSTES
         # =====================================================================
         
-        comentarios = await airtable.get_comentarios(candidato_id)
+        comentarios_raw = await airtable.get_comentarios(candidato_id)
+        
+        # Filtrar solo comentarios de HUMANOS (excluir Sistema)
+        comentarios = [
+            c for c in comentarios_raw 
+            if not c.get("autor", "").startswith("Sistema")
+        ]
+        
         notas_contexto = ""
         ajustes_manuales = {}
         ajustes_ia = {}
@@ -607,7 +641,7 @@ async def evaluate_by_tracking_code(
                 nota_texto = c.get('comentario', '')
                 notas_contexto += f"- {c.get('autor', 'Usuario')}: {nota_texto}\n"
             
-            print(f"[INFO] Incluyendo {len(comentarios)} notas de evaluadores en la evaluación")
+            print(f"[INFO] Incluyendo {len(comentarios)} notas HUMANAS en la evaluación (excluidas {len(comentarios_raw) - len(comentarios)} del sistema)")
             
             # =====================================================================
             # PASO 1: ANÁLISIS INTELIGENTE CON IA (comentarios de texto libre)
