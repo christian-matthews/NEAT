@@ -107,17 +107,17 @@ Si hay brechas importantes, ajusta significativamente (bajar 20-40 puntos)."""
         )
         
         response_text = response.choices[0].message.content.strip()
+        print(f"[DEBUG] Respuesta OpenAI: {response_text[:200]}...")
         
-        # Limpiar respuesta
-        if response_text.startswith("```"):
-            response_text = response_text.split("```")[1]
-            if response_text.startswith("json"):
-                response_text = response_text[4:]
-        if response_text.endswith("```"):
-            response_text = response_text[:-3]
+        # Limpiar respuesta de markdown
+        import re as regex_module
+        json_match = regex_module.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            response_text = json_match.group()
         
         import json
         adjustments = json.loads(response_text)
+        print(f"[DEBUG] Ajustes parseados: {adjustments}")
         
         # Filtrar valores null
         result = {}
@@ -126,14 +126,18 @@ Si hay brechas importantes, ajusta significativamente (bajar 20-40 puntos)."""
                 result[key] = adjustments[key]
         
         if result:
-            print(f"[INFO] Ajustes IA de comentarios: {result}")
+            print(f"[INFO] ✅ Ajustes IA de comentarios: {result}")
             if adjustments.get('reasoning'):
                 print(f"[INFO] Razón: {adjustments['reasoning']}")
+        else:
+            print(f"[WARN] No se detectaron ajustes en la respuesta")
         
         return result
         
     except Exception as e:
-        print(f"[WARN] Error analizando comentarios con IA: {e}")
+        import traceback
+        print(f"[ERROR] Error analizando comentarios con IA: {e}")
+        traceback.print_exc()
         return {}
 
 
@@ -603,16 +607,31 @@ async def evaluate_by_tracking_code(
         # =====================================================================
         
         result = evaluator.evaluate(texto_completo)
+        print(f"[DEBUG] Score base del motor: {result.score_promedio}")
+        print(f"[DEBUG] Ajustes a aplicar: {ajustes_manuales}")
         
         # Preparar datos para Airtable (aplicando ajustes manuales si existen)
+        # Si hay ajuste de score_promedio, también ajustar proporcionalmente admin/ops/biz
+        base_score = result.score_promedio
+        adjusted_score = ajustes_manuales.get('score_promedio', base_score)
+        
+        # Si el score fue ajustado, calcular factor de ajuste para las subcategorías
+        if 'score_promedio' in ajustes_manuales and base_score > 0:
+            adjustment_factor = adjusted_score / base_score
+            print(f"[DEBUG] Factor de ajuste: {adjustment_factor:.2f}")
+        else:
+            adjustment_factor = 1.0
+        
+        # Obtener scores base
+        admin_base = result.fits.get("admin", type("obj", (), {"score": 0})).score if "admin" in result.fits else 0
+        ops_base = result.fits.get("ops", type("obj", (), {"score": 0})).score if "ops" in result.fits else 0
+        biz_base = result.fits.get("biz", type("obj", (), {"score": 0})).score if "biz" in result.fits else 0
+        
         evaluation_data = {
-            "score_promedio": ajustes_manuales.get('score_promedio', result.score_promedio),
-            "score_admin": ajustes_manuales.get('score_admin', 
-                result.fits.get("admin", type("obj", (), {"score": 0})).score if "admin" in result.fits else 0),
-            "score_ops": ajustes_manuales.get('score_ops',
-                result.fits.get("ops", type("obj", (), {"score": 0})).score if "ops" in result.fits else 0),
-            "score_biz": ajustes_manuales.get('score_biz',
-                result.fits.get("biz", type("obj", (), {"score": 0})).score if "biz" in result.fits else 0),
+            "score_promedio": adjusted_score,
+            "score_admin": ajustes_manuales.get('score_admin', int(admin_base * adjustment_factor)),
+            "score_ops": ajustes_manuales.get('score_ops', int(ops_base * adjustment_factor)),
+            "score_biz": ajustes_manuales.get('score_biz', int(biz_base * adjustment_factor)),
             "hands_on_index": ajustes_manuales.get('hands_on_index', result.inference.hands_on_index),
             "potential_score": ajustes_manuales.get('potential_score', result.inference.potential_score),
             "retention_risk": ajustes_manuales.get('retention_risk', result.inference.retention_risk.value),
@@ -620,6 +639,10 @@ async def evaluate_by_tracking_code(
             "industry_tier": result.inference.industry_tier.value,
             "config_version": result.config_version
         }
+        
+        print(f"[INFO] ✅ Evaluación final: score={evaluation_data['score_promedio']}, "
+              f"admin={evaluation_data['score_admin']}, ops={evaluation_data['score_ops']}, "
+              f"biz={evaluation_data['score_biz']}, hands_on={evaluation_data['hands_on_index']}")
         
         # Guardar evaluación en Airtable
         saved = await airtable.create_evaluacion(candidato_id, evaluation_data, codigo_tracking)
