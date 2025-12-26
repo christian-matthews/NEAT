@@ -113,7 +113,7 @@ function App() {
           <Route path="/" element={
             api.isAuthenticated() 
               ? <DashboardRedirect /> 
-              : <Apply />
+              : <Navigate to="/login" replace />
           } />
           
           <Route path="/dashboard" element={<DashboardRedirect />} />
