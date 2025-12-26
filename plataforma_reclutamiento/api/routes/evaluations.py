@@ -33,6 +33,111 @@ def get_pdf_extractor() -> PDFExtractor:
 
 
 # ============================================================================
+# Análisis Inteligente de Comentarios con IA
+# ============================================================================
+
+async def analyze_interview_feedback(comentarios: list) -> dict:
+    """
+    Analiza comentarios de entrevista con IA para extraer ajustes de evaluación.
+    
+    Args:
+        comentarios: Lista de comentarios de evaluadores
+        
+    Returns:
+        Dict con ajustes de score basados en el análisis
+    """
+    if not comentarios:
+        return {}
+    
+    # Construir texto de comentarios
+    feedback_text = "\n\n".join([
+        f"**{c.get('autor', 'Evaluador')}** ({c.get('created_at', 'sin fecha')}):\n{c.get('comentario', '')}"
+        for c in comentarios
+    ])
+    
+    if len(feedback_text.strip()) < 50:
+        return {}
+    
+    try:
+        from openai import OpenAI
+        
+        api_key = os.getenv("OPENAI_API") or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            print("[WARN] No hay API key de OpenAI para análisis de comentarios")
+            return {}
+        
+        client = OpenAI(api_key=api_key)
+        
+        prompt = """Analiza los siguientes comentarios de entrevista de un candidato y extrae ajustes de evaluación.
+
+COMENTARIOS DE EVALUADORES:
+---
+{feedback}
+---
+
+Basándote en los comentarios, genera ajustes de score en formato JSON. 
+Considera:
+- Comentarios positivos deben mantener o subir scores
+- Comentarios negativos o brechas identificadas deben bajar scores
+- Si mencionan "perfil ejecutor" o "sin ownership" -> bajar hands_on_index
+- Si mencionan "brecha para rol Senior" -> bajar potential_score
+- Si mencionan "riesgo de que se vaya" -> retention_risk alto
+- Si el candidato parece sólido -> mantener scores altos
+
+Responde SOLO con JSON válido, sin explicaciones:
+{{
+    "score_promedio": null o número 0-100,
+    "hands_on_index": null o número 0-100,
+    "potential_score": null o número 0-100,
+    "retention_risk": null o "Alto" o "Medio" o "Bajo",
+    "reasoning": "Explicación breve de los ajustes"
+}}
+
+Si no hay suficiente información para ajustar un campo, usa null.
+Si los comentarios son positivos, mantén los scores altos (80+).
+Si hay brechas importantes, ajusta significativamente (bajar 20-40 puntos)."""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "user", "content": prompt.format(feedback=feedback_text)}
+            ],
+            max_tokens=500,
+            temperature=0
+        )
+        
+        response_text = response.choices[0].message.content.strip()
+        
+        # Limpiar respuesta
+        if response_text.startswith("```"):
+            response_text = response_text.split("```")[1]
+            if response_text.startswith("json"):
+                response_text = response_text[4:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
+        
+        import json
+        adjustments = json.loads(response_text)
+        
+        # Filtrar valores null
+        result = {}
+        for key in ['score_promedio', 'hands_on_index', 'potential_score', 'retention_risk']:
+            if adjustments.get(key) is not None:
+                result[key] = adjustments[key]
+        
+        if result:
+            print(f"[INFO] Ajustes IA de comentarios: {result}")
+            if adjustments.get('reasoning'):
+                print(f"[INFO] Razón: {adjustments['reasoning']}")
+        
+        return result
+        
+    except Exception as e:
+        print(f"[WARN] Error analizando comentarios con IA: {e}")
+        return {}
+
+
+# ============================================================================
 # Evaluation Endpoints
 # ============================================================================
 
@@ -398,33 +503,42 @@ async def evaluate_by_tracking_code(
             )
         
         # =====================================================================
-        # OBTENER COMENTARIOS/NOTAS PARA CONTEXTO Y AJUSTES MANUALES
+        # OBTENER COMENTARIOS/NOTAS PARA CONTEXTO Y AJUSTES
         # =====================================================================
         
         comentarios = await airtable.get_comentarios(candidato_id)
         notas_contexto = ""
         ajustes_manuales = {}
+        ajustes_ia = {}
         
         if comentarios:
             notas_contexto = "\n\n=== NOTAS DE EVALUADORES ===\n"
             for c in comentarios:
                 nota_texto = c.get('comentario', '')
                 notas_contexto += f"- {c.get('autor', 'Usuario')}: {nota_texto}\n"
-                
-                # Parsear ajustes manuales de las notas
-                # Formatos soportados: 
-                #   - "hands on: 80%", "hands-on 80", "hand on 80%"
-                #   - "indicador a 80%", "cambiar a 80%"
-                #   - "potencial: alto", "riesgo: bajo"
-                import re
+            
+            print(f"[INFO] Incluyendo {len(comentarios)} notas de evaluadores en la evaluación")
+            
+            # =====================================================================
+            # PASO 1: ANÁLISIS INTELIGENTE CON IA (comentarios de texto libre)
+            # =====================================================================
+            ajustes_ia = await analyze_interview_feedback(comentarios)
+            if ajustes_ia:
+                print(f"[INFO] Ajustes IA detectados: {ajustes_ia}")
+            
+            # =====================================================================
+            # PASO 2: PARSEAR AJUSTES MANUALES EXPLÍCITOS (tienen prioridad)
+            # Formatos: "hands on: 80%", "potencial: bajo", "score: 50%"
+            # =====================================================================
+            import re
+            for c in comentarios:
+                nota_texto = c.get('comentario', '')
                 nota_lower = nota_texto.lower()
                 
-                # Hands-On Index - múltiples formatos
+                # Hands-On Index
                 match = re.search(r'hands?[-\s]?on[:\s]*(?:a\s+)?(\d+)%?', nota_lower)
                 if not match:
                     match = re.search(r'indicador\s+(?:a\s+)?(\d+)%?', nota_lower)
-                if not match:
-                    match = re.search(r'cambiar\s+(?:indicador\s+)?(?:a\s+)?(\d+)%?', nota_lower)
                 if match:
                     ajustes_manuales['hands_on_index'] = int(match.group(1))
                 
@@ -466,9 +580,18 @@ async def evaluate_by_tracking_code(
                 if match:
                     ajustes_manuales['score_biz'] = int(match.group(1))
             
-            print(f"[INFO] Incluyendo {len(comentarios)} notas de evaluadores en la evaluación")
             if ajustes_manuales:
-                print(f"[INFO] Ajustes manuales detectados: {ajustes_manuales}")
+                print(f"[INFO] Ajustes manuales explícitos: {ajustes_manuales}")
+            
+            # =====================================================================
+            # PASO 3: COMBINAR AJUSTES (manuales tienen prioridad sobre IA)
+            # =====================================================================
+            # Primero IA, luego manuales sobrescriben
+            ajustes_finales = {**ajustes_ia, **ajustes_manuales}
+            ajustes_manuales = ajustes_finales
+            
+            if ajustes_manuales:
+                print(f"[INFO] Ajustes finales aplicados: {ajustes_manuales}")
         
         # Combinar CV con notas para evaluación completa
         texto_completo = cv_text
