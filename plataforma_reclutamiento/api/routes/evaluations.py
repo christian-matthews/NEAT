@@ -388,6 +388,28 @@ async def evaluate_by_tracking_code(
             raise HTTPException(status_code=404, detail=f"Candidato {candidate_id_or_tracking} no encontrado")
         
         candidato_id = candidato["id"]
+        estado_candidato = candidato.get("estado_candidato", "nuevo")
+        
+        # =====================================================================
+        # VALIDACIONES PARA RE-EVALUACIÓN
+        # =====================================================================
+        
+        # 1. No re-evaluar candidatos rechazados o descartados
+        if estado_candidato in ["rechazado", "descartado"]:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"No se puede re-evaluar un candidato con estado '{estado_candidato}'. Cambia el estado primero."
+            )
+        
+        # 2. Si es re-evaluación (force_reprocess), verificar que tenga comentarios
+        if force_reprocess:
+            comentarios_check = await airtable.get_comentarios(candidato_id)
+            if not comentarios_check or len(comentarios_check) == 0:
+                raise HTTPException(
+                    status_code=400,
+                    detail="No se puede re-evaluar sin comentarios. Agrega notas de entrevista primero."
+                )
+            print(f"[INFO] Re-evaluación con {len(comentarios_check)} comentarios")
         
         # Verificar si ya existe evaluación (y no se fuerza reproceso)
         if not force_reprocess:
@@ -646,6 +668,46 @@ async def evaluate_by_tracking_code(
         
         # Guardar evaluación en Airtable
         saved = await airtable.create_evaluacion(candidato_id, evaluation_data, codigo_tracking)
+        
+        # =====================================================================
+        # CREAR COMENTARIO AUTOMÁTICO CON AJUSTES APLICADOS
+        # =====================================================================
+        if ajustes_manuales and force_reprocess:
+            from datetime import datetime
+            
+            # Construir resumen de ajustes
+            ajustes_texto = []
+            if 'score_promedio' in ajustes_manuales:
+                ajustes_texto.append(f"score: {ajustes_manuales['score_promedio']}%")
+            if 'hands_on_index' in ajustes_manuales:
+                ajustes_texto.append(f"hands on: {ajustes_manuales['hands_on_index']}%")
+            if 'potential_score' in ajustes_manuales:
+                pot = ajustes_manuales['potential_score']
+                pot_label = "alto" if pot >= 70 else ("medio" if pot >= 40 else "bajo")
+                ajustes_texto.append(f"potencial: {pot_label}")
+            if 'retention_risk' in ajustes_manuales:
+                ajustes_texto.append(f"retención: {ajustes_manuales['retention_risk'].lower()}")
+            
+            if ajustes_texto:
+                fecha_actual = datetime.now().strftime("%d/%m/%Y")
+                comentario_auto = f"""AJUSTES AUTOMÁTICOS ({fecha_actual}):
+
+Basado en análisis de notas de entrevista:
+- Score ajustado de {int(base_score)}% a {evaluation_data['score_promedio']}%
+- Admin/Ops/Biz ajustados proporcionalmente
+
+SCORES APLICADOS:
+{', '.join(ajustes_texto)}"""
+                
+                try:
+                    await airtable.create_comentario(
+                        candidato_id=candidato_id,
+                        autor="Sistema (Re-evaluación IA)",
+                        comentario=comentario_auto
+                    )
+                    print(f"[INFO] ✅ Comentario automático creado con ajustes")
+                except Exception as e:
+                    print(f"[WARN] No se pudo crear comentario automático: {e}")
         
         # Calcular potencial basado en el score (con ajuste manual aplicado)
         potential = evaluation_data["potential_score"]

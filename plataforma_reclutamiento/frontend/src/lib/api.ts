@@ -568,6 +568,12 @@ class ApiClient {
       method: 'POST',
     })
   }
+
+  async reEvaluateCandidato(codigoTracking: string): Promise<EvaluacionAI> {
+    return this.fetch<EvaluacionAI>(`/evaluations/${codigoTracking}/evaluate?force_reprocess=true`, {
+      method: 'POST',
+    })
+  }
 }
 
 // Singleton instance

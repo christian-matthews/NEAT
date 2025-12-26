@@ -183,6 +183,56 @@ export default function ProcesoDetalle() {
     toast.success(`Evaluación masiva: ${success} exitosas, ${failed} fallidas`)
   }
 
+  const [reEvaluatingAll, setReEvaluatingAll] = useState(false)
+  
+  const handleReEvaluateAll = async () => {
+    // Solo re-evaluar candidatos que:
+    // 1. No estén rechazados/descartados
+    // 2. Tengan evaluación previa (implica que tienen que tener algo que re-evaluar)
+    const candidatosValidos = candidatos.filter(c => {
+      const estado = c.estado_candidato || 'nuevo'
+      return !['rechazado', 'descartado'].includes(estado) && evaluaciones[c.codigo_tracking]
+    })
+    
+    if (candidatosValidos.length === 0) {
+      toast.info('No hay candidatos válidos para re-evaluar. Deben tener evaluación previa y no estar rechazados.')
+      return
+    }
+    
+    setReEvaluatingAll(true)
+    let success = 0
+    let failed = 0
+    let skipped = 0
+    
+    for (const candidato of candidatosValidos) {
+      try {
+        const result = await api.reEvaluateCandidato(candidato.codigo_tracking)
+        setEvaluaciones(prev => ({
+          ...prev,
+          [candidato.codigo_tracking]: result
+        }))
+        success++
+        toast.success(`${candidato.nombre_completo}: ${result.score_total}%`)
+      } catch (error: any) {
+        // Si el error es por falta de comentarios, contar como skipped
+        if (error.message?.includes('sin comentarios') || error.message?.includes('comentarios')) {
+          skipped++
+        } else {
+          failed++
+        }
+      }
+    }
+    
+    setReEvaluatingAll(false)
+    let mensaje = `Re-evaluación: ${success} actualizadas`
+    if (skipped > 0) mensaje += `, ${skipped} sin notas`
+    if (failed > 0) mensaje += `, ${failed} fallidas`
+    toast.success(mensaje)
+    
+    // Recargar datos
+    loadData()
+  }
+
   const handleExportCSV = async () => {
     try {
       const blob = await api.exportProcesoCSV(id!)
@@ -296,7 +346,7 @@ export default function ProcesoDetalle() {
             </button>
             <button
               onClick={handleEvaluateAll}
-              disabled={evaluatingAll}
+              disabled={evaluatingAll || reEvaluatingAll}
               className="px-4 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50"
             >
               {evaluatingAll ? (
@@ -307,7 +357,25 @@ export default function ProcesoDetalle() {
               ) : (
                 <>
                   <Brain className="w-4 h-4" />
-                  Evaluar Todos
+                  Evaluar Nuevos
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleReEvaluateAll}
+              disabled={evaluatingAll || reEvaluatingAll}
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-600 rounded-lg flex items-center gap-2 text-sm font-medium disabled:opacity-50"
+              title="Re-evalúa candidatos con notas de entrevista (excluye rechazados)"
+            >
+              {reEvaluatingAll ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Re-evaluando...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" />
+                  Re-evaluar Con Notas
                 </>
               )}
             </button>
