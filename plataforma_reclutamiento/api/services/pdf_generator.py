@@ -49,12 +49,30 @@ def clean_text_for_pdf(text: str) -> str:
         '\u200c': '',
         '\u200d': '',
         '\ufeff': '',
+        # Caracteres españoles - reemplazar por equivalentes ASCII
+        'á': 'a',
+        'é': 'e',
+        'í': 'i',
+        'ó': 'o',
+        'ú': 'u',
+        'Á': 'A',
+        'É': 'E',
+        'Í': 'I',
+        'Ó': 'O',
+        'Ú': 'U',
+        'ñ': 'n',
+        'Ñ': 'N',
+        'ü': 'u',
+        'Ü': 'U',
+        '¿': '?',
+        '¡': '!',
     }
     
     for unicode_char, ascii_char in replacements.items():
         text = text.replace(unicode_char, ascii_char)
     
-    text = text.encode('latin-1', errors='replace').decode('latin-1')
+    # Reemplazar cualquier otro caracter no-ASCII por espacio
+    text = text.encode('ascii', errors='replace').decode('ascii').replace('?', '')
     
     return text
 
