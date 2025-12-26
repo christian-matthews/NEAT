@@ -41,6 +41,7 @@ export interface Candidate {
   retention_risk: string
   profile_type?: string
   industry_tier?: string
+  estado_candidato?: string
 }
 
 export interface DashboardStats {
