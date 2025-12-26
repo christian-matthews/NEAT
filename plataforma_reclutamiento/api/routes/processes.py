@@ -249,8 +249,8 @@ async def export_process_pdf(
             if coms:
                 comentarios[cid] = coms
         
-        # Generar PDF
-        pdf_bytes = generate_proceso_pdf(
+        # Generar PDF (async para usar IA en resumen de comentarios)
+        pdf_bytes = await generate_proceso_pdf(
             proceso=proceso,
             candidatos=candidatos,
             evaluaciones=evaluaciones,
