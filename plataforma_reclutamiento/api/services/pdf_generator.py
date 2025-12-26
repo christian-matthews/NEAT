@@ -6,6 +6,57 @@ from fpdf import FPDF
 from typing import List, Dict, Any
 from datetime import datetime
 import io
+import re
+
+
+def clean_text_for_pdf(text: str) -> str:
+    """
+    Limpia texto para que sea compatible con fuentes no-Unicode de FPDF.
+    Reemplaza caracteres especiales por equivalentes ASCII.
+    """
+    if not text:
+        return ""
+    
+    # Reemplazos de caracteres Unicode problemáticos
+    replacements = {
+        '•': '-',
+        '–': '-',
+        '—': '-',
+        '"': '"',
+        '"': '"',
+        ''': "'",
+        ''': "'",
+        '…': '...',
+        '→': '->',
+        '←': '<-',
+        '✓': '[OK]',
+        '✗': '[X]',
+        '★': '*',
+        '☆': '*',
+        '©': '(c)',
+        '®': '(R)',
+        '™': '(TM)',
+        '°': 'o',
+        '±': '+/-',
+        '×': 'x',
+        '÷': '/',
+        '≤': '<=',
+        '≥': '>=',
+        '≠': '!=',
+        '∞': 'inf',
+        '\u200b': '',  # Zero-width space
+        '\u200c': '',  # Zero-width non-joiner
+        '\u200d': '',  # Zero-width joiner
+        '\ufeff': '',  # BOM
+    }
+    
+    for unicode_char, ascii_char in replacements.items():
+        text = text.replace(unicode_char, ascii_char)
+    
+    # Reemplazar cualquier otro carácter no-ASCII por ?
+    text = text.encode('latin-1', errors='replace').decode('latin-1')
+    
+    return text
 
 
 class ProcesoReportPDF(FPDF):
@@ -77,7 +128,7 @@ def generate_proceso_pdf(
     
     pdf.set_font('Helvetica', '', 16)
     pdf.set_text_color(80, 60, 180)
-    cargo_nombre = proceso.get('cargo_nombre', proceso.get('cargo', 'Sin cargo'))
+    cargo_nombre = clean_text_for_pdf(proceso.get('cargo_nombre', proceso.get('cargo', 'Sin cargo')))
     pdf.cell(0, 10, cargo_nombre, ln=True, align='C')
     
     pdf.ln(5)
@@ -124,7 +175,7 @@ def generate_proceso_pdf(
     
     for label, value in stats_data:
         pdf.set_font('Helvetica', '', 10)
-        pdf.cell(60, 7, f"  • {label}:", ln=False)
+        pdf.cell(60, 7, f"  - {label}:", ln=False)
         pdf.set_font('Helvetica', 'B', 10)
         pdf.cell(0, 7, value, ln=True)
     
@@ -182,7 +233,7 @@ def generate_proceso_pdf(
                 pdf.set_text_color(50, 50, 50)
                 pdf.set_font('Helvetica', '', 7)
                 
-                nombre = c.get('nombre_completo', 'N/A')[:20]
+                nombre = clean_text_for_pdf(c.get('nombre_completo', 'N/A'))[:20]
                 score_str = f" ({score}%)" if isinstance(score, (int, float)) else ""
                 pdf.cell(col_width - 2, col_height - 1, f"{nombre}{score_str}", border=1, align='L')
     
@@ -204,7 +255,8 @@ def generate_proceso_pdf(
         # Header del candidato
         pdf.set_font('Helvetica', 'B', 18)
         pdf.set_text_color(30, 30, 30)
-        pdf.cell(0, 12, candidato.get('nombre_completo', 'Sin nombre'), ln=True)
+        nombre = clean_text_for_pdf(candidato.get('nombre_completo', 'Sin nombre'))
+        pdf.cell(0, 12, nombre, ln=True)
         
         # Badge de estado
         estado_colors = {
@@ -264,15 +316,15 @@ def generate_proceso_pdf(
             
             for label, score in scores_cat:
                 score_str = f"{score}%" if isinstance(score, (int, float)) else str(score)
-                pdf.cell(50, 6, f"  • {label}:", ln=False)
+                pdf.cell(50, 6, f"  - {label}:", ln=False)
                 pdf.cell(0, 6, score_str, ln=True)
             
             # Perfil y riesgo
             pdf.ln(3)
             pdf.set_font('Helvetica', 'I', 10)
-            profile = eval_data.get('profile_type', 'N/A')
-            risk = eval_data.get('retention_risk', 'N/A')
-            pdf.cell(0, 6, f"Perfil: {profile} | Riesgo Retención: {risk}", ln=True)
+            profile = clean_text_for_pdf(eval_data.get('profile_type', 'N/A'))
+            risk = clean_text_for_pdf(eval_data.get('retention_risk', 'N/A'))
+            pdf.cell(0, 6, f"Perfil: {profile} | Riesgo Retencion: {risk}", ln=True)
             pdf.ln(5)
         else:
             pdf.set_font('Helvetica', 'I', 10)
@@ -291,7 +343,7 @@ def generate_proceso_pdf(
                 pdf.set_font('Helvetica', 'B', 9)
                 pdf.set_text_color(80, 60, 180)
                 
-                autor = com.get('autor', 'Evaluador')
+                autor = clean_text_for_pdf(com.get('autor', 'Evaluador'))
                 fecha = com.get('created_at', '')[:10] if com.get('created_at') else ''
                 pdf.cell(0, 6, f"{autor} - {fecha}", ln=True)
                 
@@ -303,6 +355,8 @@ def generate_proceso_pdf(
                 if len(comentario) > 500:
                     comentario = comentario[:500] + "..."
                 
+                # Limpiar caracteres Unicode
+                comentario = clean_text_for_pdf(comentario)
                 pdf.multi_cell(0, 5, comentario)
                 pdf.ln(3)
         else:
@@ -330,7 +384,7 @@ def generate_simple_summary(proceso: Dict, candidatos: List) -> bytes:
     pdf.set_font('Helvetica', 'B', 20)
     pdf.cell(0, 15, 'Resumen de Proceso', ln=True, align='C')
     pdf.set_font('Helvetica', '', 12)
-    pdf.cell(0, 8, proceso.get('cargo_nombre', 'Sin cargo'), ln=True, align='C')
+    pdf.cell(0, 8, clean_text_for_pdf(proceso.get('cargo_nombre', 'Sin cargo')), ln=True, align='C')
     pdf.cell(0, 8, f"Total: {len(candidatos)} candidatos", ln=True, align='C')
     
     return bytes(pdf.output())

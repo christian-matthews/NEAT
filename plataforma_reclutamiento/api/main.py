@@ -89,7 +89,7 @@ app = FastAPI(
     - Extracción de texto de PDFs
     - API REST moderna con FastAPI
     """,
-    version="2.1.1",  # Fix: only re-evaluate when HUMAN comments are new
+    version="2.1.2",  # Fix PDF Unicode encoding for special characters
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -142,7 +142,7 @@ async def root():
     return {
         "status": "ok",
         "service": "The Wingman API",
-        "version": "2.1.1"
+        "version": "2.1.2"
     }
 
 
