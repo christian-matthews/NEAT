@@ -76,26 +76,26 @@ COMENTARIOS DE EVALUADORES:
 ---
 
 Basándote en los comentarios, genera ajustes de score en formato JSON. 
-Considera:
-- Comentarios positivos deben mantener o subir scores
-- Comentarios negativos o brechas identificadas deben bajar scores
-- Si mencionan "perfil ejecutor" o "sin ownership" -> bajar hands_on_index
-- Si mencionan "brecha para rol Senior" -> bajar potential_score
-- Si mencionan "riesgo de que se vaya" -> retention_risk alto
-- Si el candidato parece sólido -> mantener scores altos
+
+REGLAS DE AJUSTE (IMPORTANTES):
+- Comentarios MUY NEGATIVOS ("no match cultural", "descartar", "no funciona", "mala actitud") -> score 30-50%
+- Comentarios NEGATIVOS ("brechas", "falta experiencia", "sin ownership") -> score 50-65%
+- Comentarios MIXTOS (positivos y negativos) -> score 60-75%
+- Comentarios POSITIVOS -> mantener 80%+
+- Si mencionan "perfil ejecutor" o "sin ownership" -> hands_on_index bajo (30-50%)
+- Si mencionan "brecha para rol Senior" -> potential_score bajo (30-50%)
+- Si mencionan "riesgo de que se vaya" o "no match cultural" -> retention_risk "Alto"
 
 Responde SOLO con JSON válido, sin explicaciones:
 {{
-    "score_promedio": null o número 0-100,
+    "score_promedio": número 0-100 (OBLIGATORIO si hay comentarios negativos),
     "hands_on_index": null o número 0-100,
     "potential_score": null o número 0-100,
     "retention_risk": null o "Alto" o "Medio" o "Bajo",
     "reasoning": "Explicación breve de los ajustes"
 }}
 
-Si no hay suficiente información para ajustar un campo, usa null.
-Si los comentarios son positivos, mantén los scores altos (80+).
-Si hay brechas importantes, ajusta significativamente (bajar 20-40 puntos)."""
+IMPORTANTE: Si el evaluador indica que quiere descartar o sacar del proceso al candidato, el score_promedio debe ser 40% o menos."""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",

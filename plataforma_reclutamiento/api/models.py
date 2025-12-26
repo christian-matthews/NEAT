@@ -137,6 +137,7 @@ class CandidatoResponse(BaseModel):
     proceso: Optional[List[str]] = None
     cargo: Optional[List[str]] = None
     created_at: Optional[str] = None
+    estado_candidato: Optional[str] = "nuevo"
 
 
 class CandidatoWithEvaluation(CandidatoResponse):

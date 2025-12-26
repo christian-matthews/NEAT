@@ -151,6 +151,7 @@ async def get_candidate(
             proceso=candidato.get("proceso"),
             cargo=candidato.get("cargo"),
             created_at=candidato.get("created_at"),
+            estado_candidato=candidato.get("estado_candidato", "nuevo"),
             score_promedio=evaluacion.get("score_promedio", 0) if evaluacion else 0,
             hands_on_index=evaluacion.get("hands_on_index", 0) if evaluacion else 0,
             retention_risk=evaluacion.get("retention_risk", "Bajo") if evaluacion else "Bajo",
