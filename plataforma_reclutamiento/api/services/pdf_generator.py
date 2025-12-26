@@ -364,7 +364,22 @@ async def generate_proceso_pdf(
                 pdf.set_text_color(150, 150, 150)
                 pdf.cell(0, 5, "Sin notas de entrevista", ln=True)
             
-            pdf.ln(5)
+            # Link al CV
+            cv_link = None
+            if candidato.get('cv_archivo') and isinstance(candidato['cv_archivo'], list) and len(candidato['cv_archivo']) > 0:
+                cv_link = candidato['cv_archivo'][0].get('url', '')
+            elif candidato.get('cv_url'):
+                cv_link = candidato['cv_url']
+            
+            if cv_link:
+                pdf.set_font('Helvetica', 'U', 8)
+                pdf.set_text_color(59, 130, 246)
+                x_start = pdf.get_x()
+                y_start = pdf.get_y()
+                pdf.cell(30, 4, "[Ver CV]", ln=True)
+                pdf.link(x_start, y_start, 30, 4, cv_link)
+            
+            pdf.ln(3)
             
             # Linea separadora
             pdf.set_draw_color(200, 200, 200)
@@ -479,13 +494,28 @@ async def generate_proceso_pdf(
             pdf.set_text_color(150, 150, 150)
             pdf.cell(0, 6, "Sin notas de entrevista", ln=True)
         
-        # Link al CV
-        if candidato.get('cv_url'):
+        # Link al CV (clickeable)
+        if candidato.get('cv_url') or candidato.get('cv_archivo'):
             pdf.ln(5)
-            pdf.set_font('Helvetica', '', 8)
+            pdf.set_font('Helvetica', 'U', 9)  # Underline para indicar link
             pdf.set_text_color(59, 130, 246)
-            cv_url = candidato['cv_url'][:80] + "..." if len(candidato['cv_url']) > 80 else candidato['cv_url']
-            pdf.cell(0, 5, f"CV: {cv_url}", ln=True)
+            
+            # Priorizar cv_archivo (Airtable attachment) sobre cv_url
+            cv_link = None
+            if candidato.get('cv_archivo') and isinstance(candidato['cv_archivo'], list) and len(candidato['cv_archivo']) > 0:
+                cv_link = candidato['cv_archivo'][0].get('url', '')
+            elif candidato.get('cv_url'):
+                cv_link = candidato['cv_url']
+            
+            if cv_link:
+                # Guardar posicion para el link
+                x_start = pdf.get_x()
+                y_start = pdf.get_y()
+                
+                pdf.cell(0, 5, "Ver CV del candidato (click aqui)", ln=True)
+                
+                # Agregar link clickeable
+                pdf.link(x_start, y_start, 150, 5, cv_link)
     
     return bytes(pdf.output())
 
