@@ -601,6 +601,10 @@ export async function addComment(candidateId: string, autor: string, comentario:
   return api.addComment(candidateId, autor, comentario)
 }
 
+export async function updateCandidato(id: string, data: Partial<Candidato>): Promise<Candidato> {
+  return api.updateCandidato(id, data)
+}
+
 export async function getConfig(): Promise<any> {
   return api.getConfig()
 }

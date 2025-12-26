@@ -23,10 +23,21 @@ import {
   getComments, 
   addComment,
   evaluateCandidate,
+  updateCandidato,
   type Candidate,
   type EvaluationResult,
   type Comment
 } from '@/lib/api'
+
+// Estados de candidato (sincronizados con Airtable)
+const ESTADOS_CANDIDATO = [
+  { value: 'nuevo', label: 'Nuevo', color: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50' },
+  { value: 'en_revision', label: 'En Revisión', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
+  { value: 'entrevista', label: 'Entrevista', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+  { value: 'finalista', label: 'Finalista', color: 'bg-amber-500/20 text-amber-400 border-amber-500/50' },
+  { value: 'seleccionado', label: 'Seleccionado', color: 'bg-green-500/20 text-green-400 border-green-500/50' },
+  { value: 'descartado', label: 'Descartado', color: 'bg-red-500/20 text-red-400 border-red-500/50' },
+]
 
 interface CandidateDetailProps {
   candidateId: string
@@ -90,6 +101,21 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
     },
   })
 
+  const estadoMutation = useMutation({
+    mutationFn: (nuevoEstado: string) => updateCandidato(candidateId, { estado_candidato: nuevoEstado }),
+    onSuccess: () => {
+      toast.success('Estado actualizado')
+      queryClient.invalidateQueries({ queryKey: ['candidate', candidateId] })
+    },
+    onError: (err: Error) => {
+      toast.error(`Error al actualizar estado: ${err.message}`)
+    },
+  })
+
+  const getEstadoBadge = (estado: string) => {
+    return ESTADOS_CANDIDATO.find(e => e.value === estado) || ESTADOS_CANDIDATO[0]
+  }
+
   if (loadingCandidate) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -119,9 +145,26 @@ export default function CandidateDetail({ candidateId, onBack }: CandidateDetail
         </button>
         
         <div className="flex-1">
-          <h1 className="text-2xl font-semibold text-white">
-            {candidate.nombre_completo}
-          </h1>
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-semibold text-white">
+              {candidate.nombre_completo}
+            </h1>
+            
+            {/* Selector de Estado */}
+            <select
+              value={candidate.estado_candidato || 'nuevo'}
+              onChange={e => estadoMutation.mutate(e.target.value)}
+              disabled={estadoMutation.isPending}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium border cursor-pointer transition-colors ${
+                getEstadoBadge(candidate.estado_candidato || 'nuevo').color
+              } ${estadoMutation.isPending ? 'opacity-50' : ''}`}
+            >
+              {ESTADOS_CANDIDATO.map(e => (
+                <option key={e.value} value={e.value}>{e.label}</option>
+              ))}
+            </select>
+          </div>
+          
           <div className="flex items-center gap-4 mt-1 text-sm text-zinc-500">
             <span className="flex items-center gap-1">
               <Mail className="w-4 h-4" />
