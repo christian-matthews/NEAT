@@ -184,3 +184,4 @@ El plan gratuito de Render entra en "sleep" después de inactividad.
 | Formulario Postulación | `https://neat-frontend.onrender.com/apply/CODIGO` |
 
 
+

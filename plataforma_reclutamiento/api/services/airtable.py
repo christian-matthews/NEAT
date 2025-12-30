@@ -389,7 +389,19 @@ class AirtableService:
         return self._format_evaluacion(record) if record else None
     
     async def create_evaluacion(self, candidato_id: str, evaluation_data: Dict[str, Any], codigo_tracking: Optional[str] = None) -> Dict[str, Any]:
-        """Crea o actualiza la evaluación de un candidato."""
+        """Crea o actualiza la evaluación de un candidato.
+        
+        IMPORTANTE: Si ya existe una evaluación para este candidato, la ACTUALIZA en lugar de crear duplicados.
+        """
+        
+        # =====================================================================
+        # VERIFICAR SI YA EXISTE UNA EVALUACIÓN PARA ESTE CANDIDATO
+        # =====================================================================
+        existing_eval = await self.get_evaluacion(candidato_id, codigo_tracking)
+        existing_record_id = existing_eval.get("id") if existing_eval else None
+        
+        if existing_record_id:
+            print(f"[INFO] Evaluación existente encontrada ({existing_record_id}), se actualizará")
         
         # Soportar tanto formato anidado (fits/inference) como formato plano
         fits = evaluation_data.get("fits", {})
@@ -449,8 +461,8 @@ class AirtableService:
             "config_version": evaluation_data.get("config_version", "1.0"),
         }
         
-        # Solo agregar postulacion si es un ID válido
-        if candidato_id and candidato_id.startswith("rec"):
+        # Solo agregar postulacion si es un ID válido (y solo para nuevos registros)
+        if candidato_id and candidato_id.startswith("rec") and not existing_record_id:
             fields["postulacion"] = [candidato_id]
         
         # Agregar keywords encontradas (solo si existe fits anidado)
@@ -464,7 +476,18 @@ class AirtableService:
             fields["keywords_found_biz"] = ", ".join(fits["biz"].get("found", []))
             fields["reasoning_biz"] = fits["biz"].get("reasoning", "")
         
-        record = await self._create_record(self.config.table_evaluaciones, fields)
+        # =====================================================================
+        # ACTUALIZAR O CREAR
+        # =====================================================================
+        if existing_record_id:
+            # ACTUALIZAR el registro existente
+            record = await self._update_record(self.config.table_evaluaciones, existing_record_id, fields)
+            print(f"[INFO] ✅ Evaluación ACTUALIZADA: {existing_record_id}")
+        else:
+            # CREAR nuevo registro
+            record = await self._create_record(self.config.table_evaluaciones, fields)
+            print(f"[INFO] ✅ Evaluación CREADA: {record.get('id')}")
+        
         return self._format_evaluacion(record)
     
     async def update_evaluacion(self, record_id: str, evaluation_data: Dict[str, Any]) -> Dict[str, Any]:

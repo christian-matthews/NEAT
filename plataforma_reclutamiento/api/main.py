@@ -89,7 +89,7 @@ app = FastAPI(
     - Extracción de texto de PDFs
     - API REST moderna con FastAPI
     """,
-    version="2.2.3",  # Remove CV links (Airtable URLs expire)
+    version="2.3.0",  # Fix: Update existing evaluations instead of creating duplicates
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
@@ -142,7 +142,7 @@ async def root():
     return {
         "status": "ok",
         "service": "The Wingman API",
-        "version": "2.2.3"
+        "version": "2.3.0"
     }
 
 
