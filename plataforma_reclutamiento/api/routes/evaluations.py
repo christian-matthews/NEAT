@@ -524,97 +524,121 @@ async def evaluate_by_tracking_code(
             
             print(f"[INFO] {codigo_tracking}: Hay comentarios nuevos, re-evaluando...")
         
-        # Obtener path al PDF
-        cv_url = candidato.get("cv_url")
-        cv_attachment = candidato.get("cv_archivo") or candidato.get("cv_attachment")
-        pdf_path = None
-        temp_file = None
-        
-        # Intentar primero con attachment de Airtable
-        if cv_attachment and isinstance(cv_attachment, list) and len(cv_attachment) > 0:
-            attachment_url = cv_attachment[0].get("url")
-            if attachment_url:
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    response = await client.get(attachment_url)
-                    response.raise_for_status()
-                    
-                    temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-                    temp_file.write(response.content)
-                    temp_file.close()
-                    pdf_path = temp_file.name
-        
-        # Si no hay attachment, buscar archivo local
-        if not pdf_path and cv_url:
-            if "localhost:8000/files/" in cv_url or "/files/" in cv_url:
-                filename = cv_url.split("/files/")[-1]
-                filename = urllib.parse.unquote(filename)
-                
-                cvs_dir = Path(__file__).parent.parent.parent / "data" / "cvs"
-                local_path = cvs_dir / filename
-                
-                if local_path.exists():
-                    pdf_path = str(local_path)
-            elif cv_url.startswith("http"):
-                async with httpx.AsyncClient(timeout=60.0) as client:
-                    response = await client.get(cv_url)
-                    response.raise_for_status()
-                    
-                    temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-                    temp_file.write(response.content)
-                    temp_file.close()
-                    pdf_path = temp_file.name
-        
-        if not pdf_path:
-            raise HTTPException(
-                status_code=400,
-                detail=f"No se encontró el CV para {codigo_tracking}. CV URL: {cv_url}"
-            )
-        
         # =====================================================================
-        # PROCESAR CV CON OPENAI
+        # CACHE DE CV: Verificar si ya tenemos el texto extraído
         # =====================================================================
+        cv_text = candidato.get("cv_texto", "").strip()
+        cv_data = None
+        used_cache = False
         
-        try:
-            print(f"[INFO] Procesando CV con OpenAI: {codigo_tracking}")
+        if cv_text and len(cv_text) > 100:
+            # ✅ CACHE HIT: Usar texto ya extraído
+            print(f"[INFO] ⚡ {codigo_tracking}: Usando cache de CV ({len(cv_text)} chars)")
+            used_cache = True
+        else:
+            # ❌ CACHE MISS: Necesitamos procesar el PDF
+            print(f"[INFO] {codigo_tracking}: Cache vacío, procesando PDF...")
             
-            # Crear procesador de CV
-            cv_processor = CVProcessor()
+            # Obtener path al PDF
+            cv_url = candidato.get("cv_url")
+            cv_attachment = candidato.get("cv_archivo") or candidato.get("cv_attachment")
+            pdf_path = None
+            temp_file = None
             
-            # Extraer información estructurada del CV
-            cv_data = cv_processor.process_pdf(pdf_path)
+            # Intentar primero con attachment de Airtable
+            if cv_attachment and isinstance(cv_attachment, list) and len(cv_attachment) > 0:
+                attachment_url = cv_attachment[0].get("url")
+                if attachment_url:
+                    async with httpx.AsyncClient(timeout=60.0) as client:
+                        response = await client.get(attachment_url)
+                        response.raise_for_status()
+                        
+                        temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                        temp_file.write(response.content)
+                        temp_file.close()
+                        pdf_path = temp_file.name
             
-            # Obtener texto completo para evaluación
-            cv_text = cv_data.texto_completo
+            # Si no hay attachment, buscar archivo local
+            if not pdf_path and cv_url:
+                if "localhost:8000/files/" in cv_url or "/files/" in cv_url:
+                    filename = cv_url.split("/files/")[-1]
+                    filename = urllib.parse.unquote(filename)
+                    
+                    cvs_dir = Path(__file__).parent.parent.parent / "data" / "cvs"
+                    local_path = cvs_dir / filename
+                    
+                    if local_path.exists():
+                        pdf_path = str(local_path)
+                elif cv_url.startswith("http"):
+                    async with httpx.AsyncClient(timeout=60.0) as client:
+                        response = await client.get(cv_url)
+                        response.raise_for_status()
+                        
+                        temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+                        temp_file.write(response.content)
+                        temp_file.close()
+                        pdf_path = temp_file.name
             
-            # Guardar datos extraídos en el candidato
-            cv_data_json = cv_data.to_json()
+            if not pdf_path:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"No se encontró el CV para {codigo_tracking}. CV URL: {cv_url}"
+                )
             
-            # Actualizar candidato con información extraída
-            await airtable.update_candidato(candidato_id, {
-                "cv_texto": cv_text[:10000] if len(cv_text) > 10000 else cv_text,  # Limitar tamaño
-                "cv_data_json": cv_data_json,
-                "años_experiencia": cv_data.años_experiencia,
-                "titulo_profesional": cv_data.titulo_profesional,
-                "resumen_perfil": cv_data.resumen_perfil,
-            })
+            # =====================================================================
+            # PROCESAR CV CON OPENAI
+            # =====================================================================
             
-            print(f"[INFO] CV procesado. Texto extraído: {len(cv_text)} caracteres")
+            try:
+                print(f"[INFO] Procesando CV con OpenAI: {codigo_tracking}")
+                
+                # Crear procesador de CV
+                cv_processor = CVProcessor()
+                
+                # Extraer información estructurada del CV
+                cv_data = cv_processor.process_pdf(pdf_path)
+                
+                # Obtener texto completo para evaluación
+                cv_text = cv_data.texto_completo
+                
+                # Guardar datos extraídos en el candidato (CACHE para próximas veces)
+                cv_data_json = cv_data.to_json()
+                
+                # Actualizar candidato con información extraída
+                await airtable.update_candidato(candidato_id, {
+                    "cv_texto": cv_text[:10000] if len(cv_text) > 10000 else cv_text,  # Limitar tamaño
+                    "cv_data_json": cv_data_json,
+                    "años_experiencia": cv_data.años_experiencia,
+                    "titulo_profesional": cv_data.titulo_profesional,
+                    "resumen_perfil": cv_data.resumen_perfil,
+                })
+                
+                print(f"[INFO] ✅ CV procesado y cacheado: {len(cv_text)} caracteres")
+                
+            except Exception as e:
+                print(f"[WARN] Error procesando CV con OpenAI: {e}")
+                # Fallback a extractor tradicional
+                from engine import PDFExtractor
+                pdf_extractor = PDFExtractor()
+                cv_text = pdf_extractor.extract_with_fallback(pdf_path)
+                cv_data = None
+                
+                # Guardar también el texto del fallback como cache
+                if cv_text:
+                    try:
+                        await airtable.update_candidato(candidato_id, {
+                            "cv_texto": cv_text[:10000] if len(cv_text) > 10000 else cv_text
+                        })
+                    except:
+                        pass
             
-        except Exception as e:
-            print(f"[WARN] Error procesando CV con OpenAI: {e}")
-            # Fallback a extractor tradicional
-            from engine import PDFExtractor
-            pdf_extractor = PDFExtractor()
-            cv_text = pdf_extractor.extract_with_fallback(pdf_path)
-            cv_data = None
-        
-        finally:
-            # Limpiar archivo temporal si existe
-            if temp_file:
-                try:
-                    os.unlink(temp_file.name)
-                except:
-                    pass
+            finally:
+                # Limpiar archivo temporal si existe
+                if temp_file:
+                    try:
+                        os.unlink(temp_file.name)
+                    except:
+                        pass
         
         if not cv_text or not cv_text.strip():
             raise HTTPException(
@@ -827,6 +851,7 @@ SCORES APLICADOS:
             "perfil_tipo": evaluation_data["profile_type"],
             "industry_tier": evaluation_data["industry_tier"],
             "cv_procesado": cv_data is not None,
+            "cv_from_cache": used_cache,
             "ajustes_manuales_aplicados": bool(ajustes_manuales),
             "cached": False
         }
