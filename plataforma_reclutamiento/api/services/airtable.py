@@ -309,14 +309,18 @@ class AirtableService:
             record = await self._update_record(self.config.table_candidatos, record_id, safe_fields)
             return self._format_candidato(record)
         except Exception as e:
-            # Si falla, intentar sin los campos nuevos
-            print(f"[WARN] Error actualizando candidato, reintentando sin campos OpenAI: {e}")
+            # Si falla, intentar sin los campos que pueden no existir
+            # NOTA: cv_texto SÍ existe (creado por el usuario), NO excluirlo
+            print(f"[WARN] Error actualizando candidato, reintentando sin campos OpenAI extras: {e}")
             basic_fields = {k: v for k, v in safe_fields.items() 
-                          if k not in ["cv_texto", "cv_data_json", "años_experiencia", 
+                          if k not in ["cv_data_json", "años_experiencia", 
                                        "titulo_profesional", "resumen_perfil"]}
             if basic_fields:
-                record = await self._update_record(self.config.table_candidatos, record_id, basic_fields)
-                return self._format_candidato(record)
+                try:
+                    record = await self._update_record(self.config.table_candidatos, record_id, basic_fields)
+                    return self._format_candidato(record)
+                except Exception as e2:
+                    print(f"[ERROR] Segundo intento falló: {e2}")
             return await self.get_candidato_by_id(record_id) or {}
     
     def _format_candidato(self, record: Dict[str, Any]) -> Dict[str, Any]:
@@ -340,6 +344,7 @@ class AirtableService:
             "telefono": fields.get("telefono", ""),
             "cv_url": cv_url,
             "cv_archivo": cv_archivo,
+            "cv_texto": fields.get("cv_texto", ""),  # Cache del texto del CV
             "estado_candidato": fields.get("estado_candidato", "nuevo"),
             "score_ai": fields.get("score_ai", 0),
             "notas": fields.get("notas", ""),
