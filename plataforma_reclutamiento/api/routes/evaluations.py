@@ -439,10 +439,18 @@ async def evaluate_by_tracking_code(
                     "cached": True
                 }
         
-        # 4. Si es re-evaluación, verificar si hay comentarios nuevos
-        if force_reprocess and existing and existing.get("id"):
+        # 4. Verificar si necesitamos procesar o podemos saltar
+        # REGLA: Si NO hay cache de CV, SIEMPRE procesar (para llenar el cache)
+        cv_texto_existente = candidato.get("cv_texto", "").strip()
+        tiene_cache_cv = cv_texto_existente and len(cv_texto_existente) > 100
+        
+        if not tiene_cache_cv:
+            # ⚡ SIN CACHE DE CV → Siempre procesar para llenar el cache
+            print(f"[INFO] {codigo_tracking}: 📄 Sin cache de CV, procesando para llenar cache...")
+            # NO retornar, continuar con el procesamiento
+        elif force_reprocess and existing and existing.get("id"):
+            # ✓ Con cache de CV → Aplicar lógica de comentarios nuevos
             if not comentarios_check or len(comentarios_check) == 0:
-                # Sin comentarios → retornar evaluación existente (no error)
                 print(f"[INFO] {codigo_tracking}: Sin comentarios, retornando evaluación existente")
                 return {
                     "id": existing["id"],
@@ -461,20 +469,15 @@ async def evaluate_by_tracking_code(
                     "skip_reason": "sin_comentarios"
                 }
             
-            # Verificar si hay comentarios más recientes que la ÚLTIMA ACTUALIZACIÓN de evaluación
-            # IMPORTANTE: Solo contar comentarios de HUMANOS, no del Sistema
             from datetime import datetime
-            # Usar updated_at (fecha última re-evaluación) en lugar de created_at
             eval_time = existing.get("updated_at") or existing.get("created_at", "")
             
-            # Filtrar solo comentarios de humanos (excluir Sistema)
             comentarios_humanos = [
                 c for c in comentarios_check 
                 if not c.get("autor", "").startswith("Sistema")
             ]
             
             if not comentarios_humanos:
-                # Solo hay comentarios del sistema, no re-evaluar
                 print(f"[INFO] {codigo_tracking}: Solo comentarios del sistema, saltando")
                 return {
                     "id": existing["id"],
@@ -493,7 +496,6 @@ async def evaluate_by_tracking_code(
                     "skip_reason": "solo_comentarios_sistema"
                 }
             
-            # Buscar el comentario HUMANO más reciente
             comentario_mas_reciente = None
             for c in comentarios_humanos:
                 c_time = c.get("created_at", "")
@@ -502,9 +504,8 @@ async def evaluate_by_tracking_code(
             
             print(f"[DEBUG] {codigo_tracking}: eval_time={eval_time}, comentario_mas_reciente={comentario_mas_reciente}")
             
-            # Si la evaluación es más reciente que todos los comentarios humanos, no re-evaluar
             if eval_time and comentario_mas_reciente and eval_time > comentario_mas_reciente:
-                print(f"[INFO] {codigo_tracking}: Evaluación ({eval_time}) más reciente que comentarios ({comentario_mas_reciente}), saltando")
+                print(f"[INFO] {codigo_tracking}: Evaluación más reciente que comentarios, saltando")
                 return {
                     "id": existing["id"],
                     "candidato_codigo": codigo_tracking,

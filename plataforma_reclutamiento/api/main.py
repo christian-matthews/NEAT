@@ -89,7 +89,7 @@ app = FastAPI(
     - Extracción de texto de PDFs
     - API REST moderna con FastAPI
     """,
-    version="2.4.0",  # Feature: CV text cache for faster re-evaluations
+    version="2.4.1",  # Fix: Always process CV if cache is empty
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc"
