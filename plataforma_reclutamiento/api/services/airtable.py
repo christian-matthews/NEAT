@@ -446,6 +446,10 @@ class AirtableService:
         
         retention_normalized = "Alto" if retention in ["Alto", "High"] else "Bajo"
         
+        # Timestamp de última actualización (para comparar con comentarios)
+        from datetime import datetime
+        updated_at = datetime.utcnow().isoformat() + "Z"
+        
         fields = {
             "candidato": codigo_tracking or "",
             "score_promedio": evaluation_data.get("score_promedio", 0),
@@ -459,6 +463,7 @@ class AirtableService:
             "industry_tier": industry_normalized,
             "risk_warning": risk_warning,
             "config_version": evaluation_data.get("config_version", "1.0"),
+            "updated_at": updated_at,  # Timestamp de última evaluación/re-evaluación
         }
         
         # Solo agregar postulacion si es un ID válido (y solo para nuevos registros)
@@ -505,6 +510,10 @@ class AirtableService:
             return {}
         
         fields = record.get("fields", {})
+        
+        # Usar updated_at si existe, sino created_at (para compatibilidad con registros antiguos)
+        updated_at = fields.get("updated_at") or record.get("createdTime")
+        
         return {
             "id": record.get("id"),
             "candidato": fields.get("candidato", []),
@@ -519,7 +528,8 @@ class AirtableService:
             "industry_tier": fields.get("industry_tier"),
             "risk_warning": fields.get("risk_warning"),
             "analysis_json": fields.get("analysis_json"),
-            "created_at": record.get("createdTime")
+            "created_at": record.get("createdTime"),
+            "updated_at": updated_at  # Fecha de última actualización
         }
     
     # =========================================================================

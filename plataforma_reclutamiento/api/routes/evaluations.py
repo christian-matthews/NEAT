@@ -461,10 +461,11 @@ async def evaluate_by_tracking_code(
                     "skip_reason": "sin_comentarios"
                 }
             
-            # Verificar si hay comentarios más recientes que la evaluación
+            # Verificar si hay comentarios más recientes que la ÚLTIMA ACTUALIZACIÓN de evaluación
             # IMPORTANTE: Solo contar comentarios de HUMANOS, no del Sistema
             from datetime import datetime
-            eval_time = existing.get("created_at", "")
+            # Usar updated_at (fecha última re-evaluación) en lugar de created_at
+            eval_time = existing.get("updated_at") or existing.get("created_at", "")
             
             # Filtrar solo comentarios de humanos (excluir Sistema)
             comentarios_humanos = [
@@ -499,9 +500,11 @@ async def evaluate_by_tracking_code(
                 if c_time and (not comentario_mas_reciente or c_time > comentario_mas_reciente):
                     comentario_mas_reciente = c_time
             
+            print(f"[DEBUG] {codigo_tracking}: eval_time={eval_time}, comentario_mas_reciente={comentario_mas_reciente}")
+            
             # Si la evaluación es más reciente que todos los comentarios humanos, no re-evaluar
             if eval_time and comentario_mas_reciente and eval_time > comentario_mas_reciente:
-                print(f"[INFO] {codigo_tracking}: Evaluación más reciente que comentarios, saltando")
+                print(f"[INFO] {codigo_tracking}: Evaluación ({eval_time}) más reciente que comentarios ({comentario_mas_reciente}), saltando")
                 return {
                     "id": existing["id"],
                     "candidato_codigo": codigo_tracking,
