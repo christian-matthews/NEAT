@@ -6,23 +6,27 @@
   </defs>
   
   <g clip-path="url(#circle)">
-    <!-- Fondo gris completo -->
-    <rect x="0" y="0" width="100" height="100" fill="#808080"/>
+    <!-- Fondo gris -->
+    <circle cx="50" cy="50" r="50" fill="#8C8C8C"/>
     
-    <!-- Mitad superior azul (diagonal) -->
-    <polygon points="0,0 100,0 100,45 0,70" fill="#2D6A8F"/>
+    <!-- Parte azul (arriba izquierda, diagonal siguiendo el avión) -->
+    <polygon points="0,0 100,0 100,32 0,52" fill="#2B6A8E"/>
     
-    <!-- Avión de papel -->
-    <!-- Ala superior (blanca) -->
-    <polygon points="5,35 95,50 45,60" fill="#FFFFFF"/>
+    <!-- AVIÓN DE PAPEL -->
     
-    <!-- Ala inferior izquierda (gris claro - sombra) -->
-    <polygon points="5,35 45,60 20,80" fill="#E0E0E0"/>
+    <!-- Ala superior principal (blanca) - triángulo grande -->
+    <polygon points="-5,28 100,32 28,58" fill="#FFFFFF"/>
     
-    <!-- Cuerpo central (sombra) -->
-    <polygon points="45,60 95,50 20,80" fill="#C0C0C0"/>
+    <!-- Sombra central del avión (gris oscuro) -->
+    <polygon points="28,58 100,32 95,75" fill="#6B6B6B"/>
     
-    <!-- Línea del pliegue central -->
-    <line x1="5" y1="35" x2="95" y2="50" stroke="#999999" stroke-width="0.5"/>
+    <!-- Ala inferior derecha (blanca) -->
+    <polygon points="28,58 95,75 55,72" fill="#F5F5F5"/>
+    
+    <!-- Ala trasera izquierda (blanca con sombra) -->
+    <polygon points="-5,28 28,58 8,78" fill="#E8E8E8"/>
+    
+    <!-- Pequeño triángulo de la cola -->
+    <polygon points="8,78 28,58 18,88" fill="#D0D0D0"/>
   </g>
 </svg>
