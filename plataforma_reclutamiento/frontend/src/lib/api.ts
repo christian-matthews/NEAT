@@ -229,11 +229,26 @@ class ApiClient {
     })
 
     if (!response.ok) {
+      // Si el servidor devuelve 401, el token expiró o es inválido
+      if (response.status === 401) {
+        this.clearSession()
+        // Redirigir a login si no estamos ya ahí
+        if (!window.location.pathname.includes('/login') && !endpoint.includes('/auth/')) {
+          window.location.href = '/login'
+        }
+      }
       const error = await response.json().catch(() => ({ detail: 'Error desconocido' }))
       throw new Error(error.detail || `Error ${response.status}`)
     }
 
     return response.json()
+  }
+
+  // Limpiar sesión (token expirado o inválido)
+  private clearSession(): void {
+    this.token = null
+    localStorage.removeItem('neat_token')
+    localStorage.removeItem('neat_user')
   }
 
   private async fetchFormData<T>(endpoint: string, formData: FormData): Promise<T> {
@@ -250,6 +265,13 @@ class ApiClient {
     })
 
     if (!response.ok) {
+      // Si el servidor devuelve 401, el token expiró o es inválido
+      if (response.status === 401) {
+        this.clearSession()
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login'
+        }
+      }
       const error = await response.json().catch(() => ({ detail: 'Error desconocido' }))
       throw new Error(error.detail || `Error ${response.status}`)
     }
@@ -296,12 +318,34 @@ class ApiClient {
   }
 
   isAuthenticated(): boolean {
-    return !!this.token
+    // Verificar que exista token Y usuario en localStorage
+    const hasToken = !!this.token
+    const hasUser = !!localStorage.getItem('neat_user')
+    return hasToken && hasUser
   }
 
   getStoredUser(): User | null {
     const userStr = localStorage.getItem('neat_user')
-    return userStr ? JSON.parse(userStr) : null
+    if (!userStr) return null
+    try {
+      return JSON.parse(userStr)
+    } catch {
+      // Si el JSON está corrupto, limpiar
+      this.clearSession()
+      return null
+    }
+  }
+
+  // Verificar si la sesión es válida (llama al servidor)
+  async validateSession(): Promise<boolean> {
+    if (!this.token) return false
+    try {
+      await this.getMe()
+      return true
+    } catch {
+      this.clearSession()
+      return false
+    }
   }
 
   // ==========================================================================
