@@ -18,7 +18,28 @@ def clean_text_for_pdf(text: str) -> str:
     if not text:
         return ""
     
-    # Reemplazos de caracteres Unicode problemáticos
+    import unicodedata
+    
+    # PASO 1: Normalizar Unicode (convertir caracteres combinantes a precompuestos)
+    # Esto convierte "a" + "́" (U+0301) en "á" (U+00E1)
+    text = unicodedata.normalize('NFC', text)
+    
+    # PASO 2: Eliminar cualquier acento combinante restante
+    # Estos son caracteres como ́ (U+0301) que no se combinaron
+    combining_marks = [
+        '\u0300',  # COMBINING GRAVE ACCENT
+        '\u0301',  # COMBINING ACUTE ACCENT
+        '\u0302',  # COMBINING CIRCUMFLEX ACCENT
+        '\u0303',  # COMBINING TILDE
+        '\u0304',  # COMBINING MACRON
+        '\u0308',  # COMBINING DIAERESIS
+        '\u030a',  # COMBINING RING ABOVE
+        '\u030c',  # COMBINING CARON
+    ]
+    for mark in combining_marks:
+        text = text.replace(mark, '')
+    
+    # PASO 3: Reemplazos de caracteres Unicode problemáticos
     replacements = {
         '•': '-',
         '–': '-',
@@ -71,7 +92,7 @@ def clean_text_for_pdf(text: str) -> str:
     for unicode_char, ascii_char in replacements.items():
         text = text.replace(unicode_char, ascii_char)
     
-    # Reemplazar cualquier otro caracter no-ASCII por espacio
+    # PASO 4: Reemplazar cualquier otro caracter no-ASCII
     text = text.encode('ascii', errors='replace').decode('ascii').replace('?', '')
     
     return text
