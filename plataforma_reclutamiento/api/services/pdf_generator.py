@@ -393,9 +393,23 @@ async def generate_proceso_pdf(
             pdf.ln(5)
     
     # ==========================================================================
-    # PAGINAS SIGUIENTES: FICHAS DE FINALISTAS Y RECHAZADOS
+    # PAGINAS SIGUIENTES: FICHAS DE TODOS LOS CANDIDATOS
+    # Orden: Finalistas > En Entrevista > En Revision > Descartados
     # ==========================================================================
-    candidatos_detalle = avanzan + rechazados
+    en_revision = [c for c in candidatos if c.get('estado_candidato') in ['nuevo', 'en_revision']]
+    
+    # Ordenar cada grupo por score (mayor primero)
+    def get_score(c):
+        eval_data = evaluaciones.get(c['id'], {})
+        return eval_data.get('score_promedio', 0) or 0
+    
+    avanzan_sorted = sorted(avanzan, key=get_score, reverse=True)
+    entrevista_sorted = sorted(en_entrevista, key=get_score, reverse=True)
+    revision_sorted = sorted(en_revision, key=get_score, reverse=True)
+    rechazados_sorted = sorted(rechazados, key=get_score, reverse=True)
+    
+    # Todos los candidatos en orden de prioridad
+    candidatos_detalle = avanzan_sorted + entrevista_sorted + revision_sorted + rechazados_sorted
     
     for candidato in candidatos_detalle:
         pdf.add_page()
