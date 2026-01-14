@@ -435,9 +435,11 @@ async def generate_proceso_pdf(
         # Info de contacto
         pdf.set_text_color(80, 80, 80)
         pdf.set_font('Helvetica', '', 10)
-        pdf.cell(0, 6, f"Email: {candidato.get('email', 'N/A')}", ln=True)
+        email = clean_text_for_pdf(candidato.get('email', 'N/A'))
+        pdf.cell(0, 6, f"Email: {email}", ln=True)
         if candidato.get('telefono'):
-            pdf.cell(0, 6, f"Telefono: {candidato['telefono']}", ln=True)
+            telefono = clean_text_for_pdf(str(candidato['telefono']))
+            pdf.cell(0, 6, f"Telefono: {telefono}", ln=True)
         pdf.ln(5)
         
         # Scores de evaluacion
